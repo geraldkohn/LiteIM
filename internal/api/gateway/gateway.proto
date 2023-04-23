@@ -1,0 +1,30 @@
+syntax="proto3";
+package pbGateway;//The package name to which the proto file belongs
+option go_package="./gateway;pbGateway"; //The generated go pb file is in the current directory, and the package name is pbGateway
+
+// 客户端发送消息, 服务端返回消息, 处理消息都是这个消息体.
+// 重复使用, 字段不需要可以暂时不填充
+message MsgFormat {
+    int32 ChatType = 1; // 聊天类型(单聊, 群聊)
+    string SendID = 2; // 发送方
+    string RecvID = 3; // 接收方
+    string GroupID = 4; // 群组号
+    int64 SendTime  = 5; // 发送时间
+    int64 Sequence = 6; // 序列号
+    int32 ContentType = 7; // 消息类型
+    bytes Content = 8; // 消息体
+}
+
+message PushMsgReq {
+    MsgFormat MsgFormat = 1;
+}
+
+message PushMsgResp {
+    bool Online = 1;
+    int32 ErrCode = 2;
+    string ErrMsg = 3;
+}
+
+service Push {
+    rpc PushMsg(PushMsgReq) returns(PushMsgResp);
+}
