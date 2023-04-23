@@ -33,23 +33,22 @@ func initNodeIP() {
 	logger.Infof("init node ip:%s", IP)
 }
 
-func initCronTask() {
-
+func initHttpServer() {
+	hServer.Run()
 }
 
-func initAll() {
-	initNodeIP()
-	initCronTask()
-	hServer.onInit()
-	wServer.onInit()
+func initWebsocketServer() {
+	wServer.Run()
 }
 
-func run() {
-	go wServer.run()
-	go hServer.run()
+func initGrpcServer() {
+
 }
 
 func Run() {
-	initAll()
-	run()
+	initNodeIP()
+	hServer.onInit()
+	wServer.onInit()
+	go initHttpServer()
+	go initWebsocketServer()
 }

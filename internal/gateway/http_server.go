@@ -25,7 +25,7 @@ func (hs *HServer) onInit() {
 	}
 }
 
-func (hs *HServer) run() {
+func (hs *HServer) Run() {
 	addr := ":" + strconv.Itoa(setting.APPSetting.HTTP.Port)
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
