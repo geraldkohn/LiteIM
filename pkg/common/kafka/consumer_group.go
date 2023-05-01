@@ -27,8 +27,7 @@ func NewConsumerGroup(topics []string, groupID string) *ConsumerGroup {
 	}
 }
 
-func (cg *ConsumerGroup) RegisterHandleAndConsumer(handler sarama.ConsumerGroupHandler) {
-	ctx := context.Background()
+func (cg *ConsumerGroup) RegisterHandleAndConsumer(ctx context.Context, handler sarama.ConsumerGroupHandler) {
 	for {
 		err := cg.ConsumerGroup.Consume(ctx, cg.topics, handler)
 		if err != nil {

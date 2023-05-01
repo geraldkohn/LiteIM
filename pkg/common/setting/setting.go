@@ -64,6 +64,6 @@ type ServiceDiscovery struct {
 }
 
 type RPC struct {
-	PushRPCPort    int32
-	GatewayRPCPort int32
+	PushRPCPort    int
+	GatewayRPCPort int
 }

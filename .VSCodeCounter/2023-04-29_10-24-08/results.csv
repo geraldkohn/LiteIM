@@ -1,0 +1,50 @@
+"filename", "language", "YAML", "Go", "Go Checksum File", "Protocol Buffers", "Go Module File", "comment", "blank", "total"
+"/root/go/src/github.com/geraldkohn/im/deploy/etcd_deployment.yml", "YAML", 82, 0, 0, 0, 0, 0, 1, 83
+"/root/go/src/github.com/geraldkohn/im/go.mod", "Go Module File", 0, 0, 0, 0, 96, 0, 5, 101
+"/root/go/src/github.com/geraldkohn/im/go.sum", "Go Checksum File", 0, 0, 686, 0, 0, 0, 1, 687
+"/root/go/src/github.com/geraldkohn/im/internal/api/chat/chat.pb.go", "Go", 0, 1150, 0, 0, 0, 0, 154, 1304
+"/root/go/src/github.com/geraldkohn/im/internal/api/chat/chat.proto", "Protocol Buffers", 0, 0, 0, 98, 0, 0, 21, 119
+"/root/go/src/github.com/geraldkohn/im/internal/api/chat/chat_grpc.pb.go", "Go", 0, 166, 0, 0, 0, 0, 26, 192
+"/root/go/src/github.com/geraldkohn/im/internal/gateway/grpc_server.go", "Go", 0, 48, 0, 0, 0, 0, 12, 60
+"/root/go/src/github.com/geraldkohn/im/internal/gateway/http_server.go", "Go", 0, 40, 0, 0, 0, 0, 8, 48
+"/root/go/src/github.com/geraldkohn/im/internal/gateway/init.go", "Go", 0, 61, 0, 0, 0, 0, 12, 73
+"/root/go/src/github.com/geraldkohn/im/internal/gateway/keep_alive.go", "Go", 0, 42, 0, 0, 0, 0, 7, 49
+"/root/go/src/github.com/geraldkohn/im/internal/gateway/ws_logic.go", "Go", 0, 179, 0, 0, 0, 0, 18, 197
+"/root/go/src/github.com/geraldkohn/im/internal/gateway/ws_server.go", "Go", 0, 235, 0, 0, 0, 0, 21, 256
+"/root/go/src/github.com/geraldkohn/im/internal/push/grpc_server.go", "Go", 0, 45, 0, 0, 0, 0, 11, 56
+"/root/go/src/github.com/geraldkohn/im/internal/push/init.go", "Go", 0, 67, 0, 0, 0, 0, 11, 78
+"/root/go/src/github.com/geraldkohn/im/internal/push/logic.go", "Go", 0, 39, 0, 0, 0, 0, 4, 43
+"/root/go/src/github.com/geraldkohn/im/internal/transfer/msg_handler.go", "Go", 0, 157, 0, 0, 0, 0, 8, 165
+"/root/go/src/github.com/geraldkohn/im/internal/transfer/retry_handler.go", "Go", 0, 27, 0, 0, 0, 0, 4, 31
+"/root/go/src/github.com/geraldkohn/im/internal/transfer/transfer.go", "Go", 0, 91, 0, 0, 0, 0, 10, 101
+"/root/go/src/github.com/geraldkohn/im/pkg/common/constant/defs.go", "Go", 0, 25, 0, 0, 0, 0, 6, 31
+"/root/go/src/github.com/geraldkohn/im/pkg/common/constant/errors.go", "Go", 0, 45, 0, 0, 0, 0, 8, 53
+"/root/go/src/github.com/geraldkohn/im/pkg/common/cronjob/job.go", "Go", 0, 35, 0, 0, 0, 0, 10, 45
+"/root/go/src/github.com/geraldkohn/im/pkg/common/cronjob/job_test.go", "Go", 0, 12, 0, 0, 0, 0, 3, 15
+"/root/go/src/github.com/geraldkohn/im/pkg/common/cronjob/scheduler.go", "Go", 0, 89, 0, 0, 0, 0, 15, 104
+"/root/go/src/github.com/geraldkohn/im/pkg/common/cronjob/scheduler_test.go", "Go", 0, 30, 0, 0, 0, 0, 6, 36
+"/root/go/src/github.com/geraldkohn/im/pkg/common/db/model.go", "Go", 0, 67, 0, 0, 0, 0, 13, 80
+"/root/go/src/github.com/geraldkohn/im/pkg/common/db/mongo_model.go", "Go", 0, 25, 0, 0, 0, 0, 8, 33
+"/root/go/src/github.com/geraldkohn/im/pkg/common/db/mysql_model.go", "Go", 0, 15, 0, 0, 0, 0, 5, 20
+"/root/go/src/github.com/geraldkohn/im/pkg/common/db/redis_model.go", "Go", 0, 85, 0, 0, 0, 0, 13, 98
+"/root/go/src/github.com/geraldkohn/im/pkg/common/grpc-etcdv3/pool.go", "Go", 0, 225, 0, 0, 0, 0, 30, 255
+"/root/go/src/github.com/geraldkohn/im/pkg/common/grpc-etcdv3/register.go", "Go", 0, 80, 0, 0, 0, 0, 17, 97
+"/root/go/src/github.com/geraldkohn/im/pkg/common/grpc-etcdv3/resolver.go", "Go", 0, 226, 0, 0, 0, 0, 40, 266
+"/root/go/src/github.com/geraldkohn/im/pkg/common/http/http_client.go", "Go", 0, 42, 0, 0, 0, 0, 6, 48
+"/root/go/src/github.com/geraldkohn/im/pkg/common/kafka/consumer.go", "Go", 0, 35, 0, 0, 0, 0, 8, 43
+"/root/go/src/github.com/geraldkohn/im/pkg/common/kafka/consumer_group.go", "Go", 0, 47, 0, 0, 0, 0, 9, 56
+"/root/go/src/github.com/geraldkohn/im/pkg/common/kafka/kafka_test.go", "Go", 0, 211, 0, 0, 0, 0, 36, 247
+"/root/go/src/github.com/geraldkohn/im/pkg/common/kafka/producer.go", "Go", 0, 51, 0, 0, 0, 0, 6, 57
+"/root/go/src/github.com/geraldkohn/im/pkg/common/logger/logger.go", "Go", 0, 44, 0, 0, 0, 0, 11, 55
+"/root/go/src/github.com/geraldkohn/im/pkg/common/service-discovery/etcd_register_discovery.go", "Go", 0, 165, 0, 0, 0, 0, 19, 184
+"/root/go/src/github.com/geraldkohn/im/pkg/common/service-discovery/etcd_test.go", "Go", 0, 21, 0, 0, 0, 0, 4, 25
+"/root/go/src/github.com/geraldkohn/im/pkg/common/service-discovery/interface.go", "Go", 0, 11, 0, 0, 0, 0, 3, 14
+"/root/go/src/github.com/geraldkohn/im/pkg/common/setting/setting.go", "Go", 0, 59, 0, 0, 0, 0, 11, 70
+"/root/go/src/github.com/geraldkohn/im/pkg/utils/cors_middleware.go", "Go", 0, 21, 0, 0, 0, 0, 4, 25
+"/root/go/src/github.com/geraldkohn/im/pkg/utils/cors_middleware_test.go", "Go", 0, 58, 0, 0, 0, 0, 10, 68
+"/root/go/src/github.com/geraldkohn/im/pkg/utils/jwt_token.go", "Go", 0, 34, 0, 0, 0, 0, 10, 44
+"/root/go/src/github.com/geraldkohn/im/pkg/utils/jwt_token_test.go", "Go", 0, 26, 0, 0, 0, 0, 5, 31
+"/root/go/src/github.com/geraldkohn/im/pkg/utils/md5.go", "Go", 0, 11, 0, 0, 0, 0, 3, 14
+"/root/go/src/github.com/geraldkohn/im/pkg/utils/md5_test.go", "Go", 0, 11, 0, 0, 0, 0, 5, 16
+"/root/go/src/github.com/geraldkohn/im/pkg/utils/time_formatter.go", "Go", 0, 22, 0, 0, 0, 0, 7, 29
+"Total", "-", 82, 4175, 686, 98, 96, 0, 665, 5802

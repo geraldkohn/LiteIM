@@ -8,66 +8,61 @@ import (
 	"sync/atomic"
 	"time"
 
-	pbChat "github.com/geraldkohn/im/internal/api/chat"
+	pbChat "github.com/geraldkohn/im/internal/api/rpc/chat"
 	"github.com/geraldkohn/im/pkg/common/constant"
-	"github.com/geraldkohn/im/pkg/common/db"
+	"github.com/geraldkohn/im/pkg/common/cronjob"
 	"github.com/geraldkohn/im/pkg/common/kafka"
 	"github.com/geraldkohn/im/pkg/common/logger"
-	"github.com/geraldkohn/im/pkg/common/setting"
 	"github.com/geraldkohn/im/pkg/utils"
 	"github.com/golang/glog"
 	"github.com/gorilla/websocket"
+	"github.com/spf13/viper"
 	"google.golang.org/protobuf/proto"
-)
-
-const (
-	pingFrequency int64 = 300 // 300 seconds, 5 minutes
 )
 
 type UserConn struct {
 	*websocket.Conn
-	lock   *sync.Mutex // 保护 websocket 连接, 顺序写入
-	userID string      // 用户 ID
-	drop   int32       // 连接是否已关闭, drop: 0 未关闭; drop: 1 已关闭
+	uid          string // 用户 ID
+	drop         int32  // 连接是否已关闭, drop: 0 未关闭; drop: 1 已关闭
+	lastPongTime int64  // 客户端上次返回 Pong 的时间点
 }
 
 type WServer struct {
-	wsUpgrader   *websocket.Upgrader  // websocket upgrader
-	connMapLock  *sync.RWMutex        // 保护 connMap
-	connMap      map[string]*UserConn // 用户 ID -> 连接
-	pongTimeLock *sync.RWMutex        // 保护 pongTimeMap
-	pongTimeMap  map[string]int64     // 用户 ID -> 上次返回 PongMessage 的时间
-	producer     *kafka.Producer      // Kafka Producer
-	delTaskChan  chan string          // 终止定时任务
-	exit         chan error           // 退出
+	wsUpgrader  *websocket.Upgrader  // websocket upgrader
+	connMapLock *sync.RWMutex        // 保护 connMap
+	connMap     map[string]*UserConn // 用户 ID -> 连接
+	producer    *kafka.Producer      // Kafka Producer
+	scheduler   cronjob.Scheduler    // 定时任务调度器
+	exit        chan error           // 退出
 }
 
 func (ws *WServer) onInit() {
 	ws.wsUpgrader = &websocket.Upgrader{
-		HandshakeTimeout: time.Duration(setting.APPSetting.Websocket.Timeout) * time.Second,
+		HandshakeTimeout: time.Duration(viper.GetInt("WebsocketTimeout")) * time.Second,
 		CheckOrigin:      func(r *http.Request) bool { return true },
 	}
 	ws.connMap = make(map[string]*UserConn)
 	ws.connMapLock = new(sync.RWMutex)
-	ws.pongTimeLock = new(sync.RWMutex)
-	ws.pongTimeMap = make(map[string]int64)
-	ws.producer = kafka.NewKafkaProducer(constant.KafkaChatTopic)
-	ws.delTaskChan = make(chan string, 32)
+	ws.producer = kafka.NewKafkaProducer(kafka.KafkaProducerConfig{
+		BrokerAddr:   viper.GetStringSlice("KafkaBrokerAddr"),
+		SASLUsername: viper.GetString("KafkaSASLUsername"),
+		SASLPassword: viper.GetString("KafkaSASLPassword"),
+		Topic:        viper.GetString("KafkaMsgTopic"),
+	})
+	ws.scheduler = cronjob.NewScheduler()
 	ws.exit = make(chan error)
 }
 
 func (ws *WServer) Run() {
-	go func() {
-		ws.run()
-	}()
-	go func() {
-		ws.handleTask()
-	}()
+	logger.Infof("Websocket Server Running...")
+	go ws.keepAlive()
+	ws.serveWs()
 }
 
-func (ws *WServer) run() {
+func (ws *WServer) serveWs() {
+	logger.Infof("Start listening websocket request!")
 	http.HandleFunc("/", ws.wsHandler)
-	err := http.ListenAndServe(":"+strconv.Itoa(setting.APPSetting.Websocket.Port), nil)
+	err := http.ListenAndServe(":"+strconv.Itoa(viper.GetInt("WebsocketPort")), nil)
 	if err != nil {
 		panic("Websocket Server Listening error:" + err.Error())
 	}
@@ -80,69 +75,54 @@ func (ws *WServer) wsHandler(w http.ResponseWriter, r *http.Request) {
 		glog.Errorf("update http connection failed %s", err.Error())
 		return
 	} else {
-		newConn := &UserConn{conn, new(sync.Mutex), query["userID"][0], 0}
+		newConn := &UserConn{conn, query["userID"][0], 0, utils.GetCurrentTimestampBySecond()}
 		ws.setProfile(newConn)
+		logger.Infof("a new websocket connection is set, userID: %v", newConn.uid)
 		go ws.readMsg(newConn)
 	}
 }
 
 // 新增 用户--Gateway 映射
-func (ws *WServer) addMapping(conn *UserConn) {
-	endpoint := fmt.Sprintf("%s:%d", IP, setting.APPSetting.RPC.GatewayRPCPort)
-	_, err := db.DB.SetOnlineUserGatewayEndpoint(conn.userID, endpoint)
+func (ws *WServer) online(userID string) {
+	endpoint := fmt.Sprintf("%s:%d", nodeIP, viper.GetInt("GRPCPort"))
+	_, err := database.SetOnlineUserGatewayEndpoint(userID, endpoint)
 	logger.Errorf("Failed to bind online user to gateway endpoint | error %v", err)
 }
 
 // 删除 用户--Gateway 映射
-func (ws *WServer) delMapping(conn *UserConn) {
-	_, err := db.DB.DeleteOnlineUserGatewayEndpoint(conn.userID)
+func (ws *WServer) offline(userID string) {
+	_, err := database.DeleteOnlineUserGatewayEndpoint(userID)
 	logger.Errorf("Failed to Debind online user to gateway endpoint | error %v", err)
 }
 
-func (ws *WServer) addConnMap(conn *UserConn) {
-	ws.connMapLock.Lock()
-	ws.connMap[conn.userID] = conn
-	ws.connMapLock.Unlock()
-}
-
-func (ws *WServer) delConnMap(conn *UserConn) {
-	atomic.StoreInt32(&conn.drop, 1)
-	ws.connMapLock.Lock()
-	delete(ws.connMap, conn.userID)
-	ws.connMapLock.Unlock()
-}
-
+// 读取 websocket 连接内容
 func (ws *WServer) readMsg(conn *UserConn) {
-	defer glog.Infof("WServer readMsg return, conn: %v", conn)
 	for {
 		messageType, msg, err := conn.ReadMessage()
 		if err != nil {
-			glog.Errorf("read message error: %v", err)
-			ws.delConnMap(conn)
-			ws.delMapping(conn)
-			ws.sendCloseMsg(conn, []byte{}) // 关闭 websocket
-			return
+			if err.Error() == websocket.ErrBadHandshake.Error() { // 握手失败, 直接返回
+				return
+			} else if err.Error() == websocket.ErrReadLimit.Error() {
+				continue
+			}
+			logger.Errorf("websocket read an error: %v", err)
+			break
 		}
 		if messageType == websocket.CloseMessage {
-			glog.Infof("websocket receive close message %s", conn.userID)
-			ws.delConnMap(conn)
-			ws.delMapping(conn)
-			return
+			glog.Infof("websocket receive close message %s", conn.uid)
+			break
 		}
-		if atomic.LoadInt32(&conn.drop) == 1 {
-			glog.Infof("websocket connection has been closed %s", conn.userID)
-			return
+		if atomic.LoadInt32(&conn.drop) == 1 { // 连接的状态被设置为已关闭
+			glog.Infof("websocket connection has been closed %s", conn.uid)
+			break
 		}
-		// if messageType == websocket.PongMessage {
-		// 	// 收到客户端的 Pong Message, 需要更新客户端到期时间
-		// 	// 这里可以仿照 nsq 来做
-		// 	// TODO
-		// 	continue
-		// }
 		ws.parseMsg(conn, msg)
 	}
+	ws.clearConn(conn)
+	logger.Infof("websocket connection is closed and clear source, conn userID: %v", conn.uid)
 }
 
+// 异步逻辑, 处理信息
 func (ws *WServer) parseMsg(conn *UserConn, msg []byte) {
 	wsReq := &pbChat.WSRequest{}
 	err := proto.Unmarshal(msg, wsReq)
@@ -152,7 +132,7 @@ func (ws *WServer) parseMsg(conn *UserConn, msg []byte) {
 	// 验证 Token
 	userID, ok := verifyToken(wsReq.Token)
 	if !ok {
-		glog.Infof("令牌过期或无效, token: %s, error: %v", wsReq.Token, err)
+		glog.Infof("token is unavilable, token: %s, error: %v", wsReq.Token, err)
 		ws.writeMsg(conn, wsReq.Action, constant.ErrParseToken.ErrCode, constant.ErrParseToken.ErrMsg, []byte{})
 		return
 	}
@@ -178,7 +158,7 @@ func (ws *WServer) parseMsg(conn *UserConn, msg []byte) {
 			return
 		}
 		go ws.pullMsgBySeqList(conn, userID, req)
-	case constant.ActionWSPushMsg:
+	case constant.ActionWSPushMsgToServer:
 		req := &pbChat.PushMsgRequest{}
 		err = proto.Unmarshal(wsReq.Data, req)
 		if err = ws.handleUnmarshalError(conn, wsReq.Action, err); err != nil {
@@ -188,7 +168,7 @@ func (ws *WServer) parseMsg(conn *UserConn, msg []byte) {
 	}
 }
 
-func (ws *WServer) writeMsg(conn *UserConn, action int32, errCode int32, errMsg string, data []byte) {
+func (ws *WServer) writeMsg(conn *UserConn, action int32, errCode int32, errMsg string, data []byte) error {
 	if data == nil {
 		data = []byte{}
 	}
@@ -199,23 +179,7 @@ func (ws *WServer) writeMsg(conn *UserConn, action int32, errCode int32, errMsg 
 		Data:      data,
 	}
 	b, _ := proto.Marshal(wsResp)
-	ws.sendBinaryMsg(conn, b)
-}
-
-func (ws *WServer) sendTextMsg(conn *UserConn, obj []byte) {
-	conn.WriteMessage(websocket.TextMessage, obj)
-}
-
-func (ws *WServer) sendBinaryMsg(conn *UserConn, obj []byte) {
-	conn.WriteMessage(websocket.BinaryMessage, obj)
-}
-
-func (ws *WServer) sendCloseMsg(conn *UserConn, obj []byte) {
-	conn.WriteMessage(websocket.CloseMessage, obj)
-}
-
-func (ws *WServer) sendPingMsg(conn *UserConn, obj []byte) {
-	conn.WriteMessage(websocket.PingMessage, obj)
+	return conn.WriteMessage(websocket.BinaryMessage, b)
 }
 
 func (ws *WServer) handleUnmarshalError(conn *UserConn, action int32, err error) error {
@@ -229,28 +193,36 @@ func (ws *WServer) handleUnmarshalError(conn *UserConn, action int32, err error)
 // 添加 websocket 连接 PongHanler
 func (ws *WServer) setPongHandler(conn *UserConn) {
 	conn.Conn.SetPongHandler(func(appData string) error {
-		now := utils.GetCurrentTimestampBySecond()
-		ws.pongTimeLock.Lock()
-		ws.pongTimeMap[appData] = now
-		ws.pongTimeLock.Unlock()
+		conn.lastPongTime = utils.GetCurrentTimestampBySecond()
 		return nil
 	})
 }
 
 // 设置 websocket 连接属性
 func (ws *WServer) setProfile(newConn *UserConn) {
-	ws.addConnMap(newConn)     // 加入 Map
-	ws.addMapping(newConn)     // 注册 redis
-	ws.addTask(newConn)        // 添加定时任务, 定时发送 Ping Message
+	ws.connMapLock.Lock()
+	ws.connMap[newConn.uid] = newConn
+	ws.connMapLock.Unlock()
+	ws.online(newConn.uid)     // 用户会话注册到 redis
+	ws.addToScheduler(newConn) // 尝试保活
 	ws.setPongHandler(newConn) // 设置 PongHandler
+}
+
+// 根据用户 uid 获取连接
+func (ws *WServer) getUserConn(uid string) *UserConn {
+	ws.connMapLock.RLock()
+	conn := ws.connMap[uid]
+	ws.connMapLock.RUnlock()
+	return conn
 }
 
 // 退出
 func (ws *WServer) Exit() {
 	close(ws.exit)
 	ws.connMapLock.Lock()
-	for _, v := range ws.connMap {
-		ws.sendCloseMsg(v, []byte("close"))
+	for _, conn := range ws.connMap {
+		conn.Close()
 	}
 	ws.connMapLock.Unlock()
+	ws.scheduler.Stop()
 }

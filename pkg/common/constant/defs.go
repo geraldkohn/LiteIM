@@ -10,7 +10,8 @@ const (
 	ActionWSGetUserMaxSeq     int32 = 1001
 	ActionWSPullMsgBySeqRange int32 = 1002
 	ActionWSPullMsgBySeqList  int32 = 1003
-	ActionWSPushMsg           int32 = 1004
+	ActionWSPushMsgToServer   int32 = 1004
+	ActionWSPushMsgToClient   int32 = 1005
 
 	// Content Type
 	ContentText    int32 = 101

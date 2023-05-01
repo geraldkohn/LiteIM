@@ -3,9 +3,8 @@ package gateway
 import (
 	"fmt"
 
-	pbChat "github.com/geraldkohn/im/internal/api/chat"
+	pbChat "github.com/geraldkohn/im/internal/api/rpc/chat"
 	"github.com/geraldkohn/im/pkg/common/constant"
-	"github.com/geraldkohn/im/pkg/common/db"
 	"github.com/geraldkohn/im/pkg/common/logger"
 	"github.com/geraldkohn/im/pkg/utils"
 	"github.com/golang/glog"
@@ -14,7 +13,7 @@ import (
 
 func (ws *WServer) getUserMaxSeq(conn *UserConn, userID string, req *pbChat.GetUserMaxSeqRequest) {
 	logger.Infof("ask to get user max sequence, userID: %s", userID)
-	seq, err := db.DB.GetUserMaxSeq(userID)
+	seq, err := database.GetUserMaxSeq(userID)
 	if err != nil {
 		glog.Errorf("failed to get user max sequence, error: %v", err)
 		ws.writeMsg(conn, constant.ActionWSGetUserMaxSeq, constant.ErrRedis.ErrCode, constant.ErrRedis.ErrMsg, []byte{})
@@ -27,7 +26,7 @@ func (ws *WServer) getUserMaxSeq(conn *UserConn, userID string, req *pbChat.GetU
 
 func (ws *WServer) pullMsgBySeqRange(conn *UserConn, userID string, req *pbChat.PullMsgBySeqRangeRequest) {
 	logger.Infof("ask to pull msg by seq range, userID: %v, range: %v-%v", userID, req.SeqBegin, req.SeqEnd)
-	result, err := db.DB.GetMsgBySeqRange(userID, req.SeqBegin, req.SeqEnd)
+	result, err := database.GetMsgBySeqRange(userID, req.SeqBegin, req.SeqEnd)
 	if err != nil {
 		ws.writeMsg(conn, constant.ActionWSPullMsgBySeqRange, constant.ErrMongo.ErrCode, constant.ErrMongo.ErrMsg, []byte{})
 		logger.Errorf("failed to get message by seq range from monogoDB, error: %v", err)
@@ -41,7 +40,7 @@ func (ws *WServer) pullMsgBySeqRange(conn *UserConn, userID string, req *pbChat.
 
 func (ws *WServer) pullMsgBySeqList(conn *UserConn, userID string, req *pbChat.PullMsgBySeqListRequest) {
 	logger.Infof("ask to pull msg by seq list, userID: %v, reqList: %v", userID, req.SeqList)
-	result, err := db.DB.GetMsgBySeqList(userID, req.SeqList)
+	result, err := database.GetMsgBySeqList(userID, req.SeqList)
 	if err != nil {
 		ws.writeMsg(conn, constant.ActionWSPullMsgBySeqList, constant.ErrMongo.ErrCode, constant.ErrMongo.ErrMsg, []byte{})
 		logger.Errorf("failed to get message by seq range from monogoDB, error: %v", err)
@@ -53,6 +52,7 @@ func (ws *WServer) pullMsgBySeqList(conn *UserConn, userID string, req *pbChat.P
 	ws.writeMsg(conn, constant.ActionWSPullMsgBySeqList, constant.OK.ErrCode, constant.OK.ErrMsg, b)
 }
 
+// 客户端向服务端推送消息
 func (ws *WServer) pushMsg(conn *UserConn, userID string, req *pbChat.PushMsgRequest) {
 	logger.Infof("user pull message to gateway server, userID: %v", userID)
 	if req.MsgFormat.SendTime == 0 {
@@ -69,10 +69,10 @@ func (ws *WServer) pushMsg(conn *UserConn, userID string, req *pbChat.PushMsgReq
 		err := ws.sendMsgToKafka(req.MsgFormat, key)
 		if err != nil {
 			logger.Errorf("chatType: ChatSingle | failed to send msg to kafka | error: %v", err)
-			ws.writeMsg(conn, constant.ActionWSPushMsg, constant.ErrKafka.ErrCode, constant.ErrKafka.ErrMsg, []byte{})
+			ws.writeMsg(conn, constant.ActionWSPushMsgToServer, constant.ErrKafka.ErrCode, constant.ErrKafka.ErrMsg, []byte{})
 			return
 		}
-		ws.writeMsg(conn, constant.ActionWSPushMsg, constant.OK.ErrCode, constant.OK.ErrMsg, []byte{})
+		ws.writeMsg(conn, constant.ActionWSPushMsgToServer, constant.OK.ErrCode, constant.OK.ErrMsg, []byte{})
 		return
 	case constant.ChatGroup:
 		// key 设置为 groupID, 这样可以保证一个群聊的消息被放入同一个分区.
@@ -80,12 +80,12 @@ func (ws *WServer) pushMsg(conn *UserConn, userID string, req *pbChat.PushMsgReq
 		err := ws.sendMsgToKafka(req.MsgFormat, key)
 		if err != nil {
 			logger.Errorf("failed to send msg to kafka, key: %v, msg: %v, error: %v", key, req.MsgFormat, err)
-			ws.writeMsg(conn, constant.ActionWSPushMsg, constant.ErrKafka.ErrCode, constant.ErrKafka.ErrMsg, []byte{})
+			ws.writeMsg(conn, constant.ActionWSPushMsgToServer, constant.ErrKafka.ErrCode, constant.ErrKafka.ErrMsg, []byte{})
 			return
 		}
-		ws.writeMsg(conn, constant.ActionWSPushMsg, constant.OK.ErrCode, constant.OK.ErrMsg, []byte{})
+		ws.writeMsg(conn, constant.ActionWSPushMsgToServer, constant.OK.ErrCode, constant.OK.ErrMsg, []byte{})
 	default:
-		ws.writeMsg(conn, constant.ActionWSPushMsg, constant.ErrChatType.ErrCode, constant.ErrChatType.ErrMsg, []byte{})
+		ws.writeMsg(conn, constant.ActionWSPushMsgToServer, constant.ErrChatType.ErrCode, constant.ErrChatType.ErrMsg, []byte{})
 	}
 }
 
@@ -114,7 +114,7 @@ func verifyToken(token string) (string, bool) {
 
 // // 获取
 // func (ws *WServer) getUserMaxSeq(conn *UserConn, req *Req) {
-// 	seq, err := db.DB.GetUserMaxSeq(req.UserID)
+// 	seq, err := ws.db.GetUserMaxSeq(req.UserID)
 // 	if err != nil {
 // 		glog.Errorf("无法获取用户最新序列号, error: %v", err)
 // 		return
@@ -147,7 +147,7 @@ func verifyToken(token string) (string, bool) {
 // 		return
 // 	}
 // 	// 从 mongoDB 中拉取消息
-// 	msgList, _, _, err := db.DB.GetMsgBySeqRange(req.UserID, seqRange.Begin, seqRange.End)
+// 	msgList, _, _, err := ws.db.GetMsgBySeqRange(req.UserID, seqRange.Begin, seqRange.End)
 // 	// 写入 websocket
 // 	b, err := proto.Marshal(msgList)
 // 	if err != nil {
@@ -167,7 +167,7 @@ func verifyToken(token string) (string, bool) {
 // 		return
 // 	}
 // 	// 从 mongoDB 中拉取消息
-// 	msgList, _, _, err := db.DB.GetMsgBySeqList(req.UserID, seqList.List)
+// 	msgList, _, _, err := ws.db.GetMsgBySeqList(req.UserID, seqList.List)
 // 	// 写入 websocket
 // 	b, err := proto.Marshal(msgList)
 // 	if err != nil {

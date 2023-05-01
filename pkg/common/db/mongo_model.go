@@ -1,32 +1,78 @@
 package db
 
 import (
-	pbChat "github.com/geraldkohn/im/internal/api/chat"
+	"context"
+
+	pbChat "github.com/geraldkohn/im/internal/api/rpc/chat"
+	"go.mongodb.org/mongo-driver/bson"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
-	cChat  = "chat"
-	cGroup = "group"
+	collectionChat  = "chat"
+	collectionGroup = "group"
 )
 
-// TODO
+type UserChat struct {
+	UID string `bson:"uid"`
+	Seq int64  `bson:"seq"`
+	Msg []byte `bson:"msg"`
+}
 
 // 根据序列号范围来拉取消息
 func (d *DataBases) GetMsgBySeqRange(uid string, seqBegin, seqEnd int64) ([]*pbChat.MsgFormat, error) {
-	return nil, nil
+	filter := bson.M{"uid": uid, "seq": bson.M{"$gt": seqBegin, "$lt": seqEnd}}
+	return d.getMsgByFilter(filter)
 }
 
 // 根据序列号列表来拉取消息
 func (d *DataBases) GetMsgBySeqList(uid string, seqList []int64) ([]*pbChat.MsgFormat, error) {
-	return nil, nil
+	filter := bson.M{"uid": uid, "seq": bson.M{"$in": seqList}}
+	return d.getMsgByFilter(filter)
+}
+
+func (d *DataBases) getMsgByFilter(filter bson.M) ([]*pbChat.MsgFormat, error) {
+	var err error
+	collection := d.mongo.Database(mongodbDataBase).Collection(collectionChat)
+	cursor, err := collection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+	// 遍历结果
+	var userChats []UserChat
+	var msgFormats []*pbChat.MsgFormat
+	if err = cursor.All(context.Background(), &userChats); err != nil {
+		return nil, err
+	}
+	// msgFormat 在 UserChat 中的 Msg 字段中
+	for _, uc := range userChats {
+		var mf pbChat.MsgFormat
+		err = proto.Unmarshal(uc.Msg, &mf)
+		if err != nil {
+			return nil, err
+		}
+		msgFormats = append(msgFormats, &mf)
+	}
+	return msgFormats, nil
 }
 
 // 直接存储单个用户消息
 func (d *DataBases) SaveSingleChat(uid string, msg *pbChat.MsgFormat) error {
-	return nil
-}
-
-// 将消息存储到多个用户的信箱
-func (d *DataBases) SaveGroupChat(uid []string, msg *pbChat.MsgFormat) error {
+	var err error
+	b, err := proto.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	collection := d.mongo.Database(mongodbDataBase).Collection(collectionChat)
+	userChat := UserChat{
+		UID: uid,
+		Seq: msg.Sequence,
+		Msg: b,
+	}
+	_, err = collection.InsertOne(context.TODO(), userChat)
+	if err != nil {
+		return err
+	}
 	return nil
 }

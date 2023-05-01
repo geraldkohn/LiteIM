@@ -2,35 +2,17 @@ package transfer
 
 import (
 	"context"
+	"time"
 
-	"github.com/Shopify/sarama"
-	pbChat "github.com/geraldkohn/im/internal/api/chat"
-	pbPush "github.com/geraldkohn/im/internal/api/push"
+	pbChat "github.com/geraldkohn/im/internal/api/rpc/chat"
 	"github.com/geraldkohn/im/pkg/common/constant"
-	"github.com/geraldkohn/im/pkg/common/db"
-	"github.com/geraldkohn/im/pkg/common/kafka"
 	"github.com/geraldkohn/im/pkg/common/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 )
 
-// MonogoDB 消费者组
-type MsgConsumerHandler struct {
-	topicHandle   map[string]handle
-	consumerGroup *kafka.ConsumerGroup
-}
-
-func NewMsgConsumerHandler() *MsgConsumerHandler {
-	h := &MsgConsumerHandler{
-		topicHandle:   make(map[string]handle),
-		consumerGroup: kafka.NewConsumerGroup([]string{constant.KafkaChatTopic}, constant.KafkaChatTopic),
-	}
-	h.topicHandle[constant.KafkaChatTopic] = msgHandle
-	return h
-}
-
 // 只要发生任何错误, 都需要被重试
-func msgHandle(msg []byte, msgKey string) error {
+func (tf *Transfer) handleMsg(msg []byte, msgKey string) error {
 	msgFormat := &pbChat.MsgFormat{}
 	err := proto.Unmarshal(msg, msgFormat)
 	if err != nil {
@@ -39,50 +21,59 @@ func msgHandle(msg []byte, msgKey string) error {
 	}
 	switch msgFormat.ChatType {
 	case constant.ChatSingle:
-		strs := []string{msgFormat.SendID, msgFormat.RecvID}
-		msgList := make([]*pbChat.MsgFormat, 0)
-		for _, uid := range strs {
-			seq, err := db.DB.IncrUserSeq(uid)
+		uids := []string{msgFormat.SendID, msgFormat.RecvID}
+		msgToPushList := make([]*pbChat.MsgFormat, 0)
+		msgToDBList := make([]*pbChat.MsgFormat, 0)
+		for _, uid := range uids {
+			// 获取最新序列号
+			seq, err := tf.db.IncrUserSeq(uid)
 			if err != nil {
 				logger.Errorf("failed to incr user sequence | error %v", err)
 				return err
 			}
+			// 复制
 			msg := &pbChat.MsgFormat{
 				ChatType:    msgFormat.ChatType,
 				SendID:      msgFormat.SendID,
-				RecvID:      msgFormat.RecvID,
+				RecvID:      uid, // 发送到发信人和收信人的收信箱
 				GroupID:     msgFormat.GroupID,
 				Sequence:    seq,
 				SendTime:    msgFormat.SendTime,
 				ContentType: msgFormat.ContentType,
 				Content:     msgFormat.Content,
 			}
-			err = db.DB.SaveSingleChat(uid, msg)
+			err = tf.db.SaveSingleChat(uid, msg)
 			if err != nil {
 				logger.Errorf("failed to save single message to monogodb | error %v", err)
 				return err
 			}
 			// 只需要推送到接收者那里
 			if uid == msgFormat.SendID {
-				continue
+				msgToDBList = append(msgToDBList, msg)
+			} else {
+				msgToPushList = append(msgToPushList, msg)
+				msgToDBList = append(msgToDBList, msg)
 			}
-			msgList = append(msgList, msg)
 		}
-		go sendMsgToPush(msgList)
+		go tf.sendMsgToPush(msgToPushList)
+		go tf.sendMsgToDB(msgToDBList)
 	case constant.ChatGroup:
-		users, err := db.DB.GetGroupAllNumber(msgFormat.GroupID)
+		groupMemberList, err := tf.db.GetGroupMemberByGroupID(msgFormat.GroupID)
 		if err != nil {
 			logger.Errorf("failed to get group number from groupID | groupID %v | error %v", msgFormat.RecvID, err)
 			return err
 		}
-		msgList := make([]*pbChat.MsgFormat, 0)
-		for _, u := range users {
-			uid := u.UserID
-			seq, err := db.DB.IncrUserSeq(uid)
+		msgToPushList := make([]*pbChat.MsgFormat, 0)
+		msgToDBList := make([]*pbChat.MsgFormat, 0)
+		for _, gm := range groupMemberList {
+			uid := gm.Uid
+			// 获取最新序列号
+			seq, err := tf.db.IncrUserSeq(uid)
 			if err != nil {
 				logger.Errorf("failed to incr user sequence | error %v", err)
 				return err
 			}
+			// 复制
 			msg := &pbChat.MsgFormat{
 				ChatType:    msgFormat.ChatType,
 				SendID:      msgFormat.SendID,
@@ -93,69 +84,42 @@ func msgHandle(msg []byte, msgKey string) error {
 				ContentType: msgFormat.ContentType,
 				Content:     msgFormat.Content,
 			}
-			err = db.DB.SaveSingleChat(uid, msg)
-			if err != nil {
-				logger.Errorf("failed to save single message to monogodb | error %v", err)
-				return err
-			}
 			// 只需要推送到接收者那里
 			if uid == msgFormat.SendID {
 				continue
 			}
-			msgList = append(msgList, msg)
+			msgToPushList = append(msgToPushList, msg)
 		}
-		go sendMsgToPush(msgList) // 发送给 Push 组件要启用新协程, 防止消费阻塞
+		go tf.sendMsgToPush(msgToPushList) // 发送给 Push 组件要启用新协程, 防止消费阻塞
+		go tf.sendMsgToDB(msgToDBList)     // 写入 DB 要启动新协程, 防止阻塞
 	default:
 		logger.Errorf("Unavailable Chat Type | ChatType %v", msgFormat.ChatType)
 	}
 	return nil
 }
 
-func (MsgConsumerHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
-func (MsgConsumerHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
-func (h *MsgConsumerHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	for msg := range claim.Messages() {
-		logger.Infof("MonogoConsumerHandler get a message %v", msg)
-		fn := h.topicHandle[msg.Topic]
-		err := fn(msg.Value, string(msg.Key))
-		if err == nil {
-			sess.MarkMessage(msg, "")
-		}
-	}
-	return nil
-}
-
 // 发送到 Push 组件, 如果发送失败则写入 Kafka, 下次继续发送
-func sendMsgToPush(message []*pbChat.MsgFormat) {
+func (tf *Transfer) sendMsgToPush(message []*pbChat.MsgFormat) {
 	var err error
 	if err != nil {
 		logger.Errorf("rpc send to push-element failed | error %v", err)
 	}
 	// 每次只发送一个, 发送成功后发送下一个, 不成功则写入 Kafka 等待消费.
-	endpoint := pushDiscovery.PickOne()
+	endpoint := tf.pushDiscovery.PickOne()
 	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	if err != nil {
 		logger.Errorf("Failed to connect to push-grpc-server | address %v | error %v", endpoint, err)
-		sendMsgToKafka(message)
+		tf.retryPush(message)
 		return
 	}
-	pushRPClient := pbPush.NewPushClient(conn)
+	pushRPClient := pbChat.NewPusherClient(conn)
 	for _, m := range message {
-		pushMsgReq := &pbPush.PushMsgReq{
-			MsgFormat: &pbPush.MsgFormat{
-				ChatType:    m.ChatType,
-				SendID:      m.SendID,
-				RecvID:      m.RecvID,
-				GroupID:     m.GroupID,
-				SendTime:    m.SendTime,
-				Sequence:    m.Sequence,
-				ContentType: m.ContentType,
-				Content:     m.Content,
-			},
+		pushMsgReq := &pbChat.PushMsgToPusherRequest{
+			MsgFormat: m,
 		}
-		pushMsgResp, err := pushRPClient.PushMsg(context.Background(), pushMsgReq)
+		pushMsgResp, err := pushRPClient.PushMsgToPusher(context.Background(), pushMsgReq)
 		if err != nil {
-			sendMsgToKafka([]*pbChat.MsgFormat{m})
+			tf.retryPush([]*pbChat.MsgFormat{m})
 			logger.Errorf("Failed to send to push client | error %v", err)
 			continue
 		}
@@ -166,12 +130,34 @@ func sendMsgToPush(message []*pbChat.MsgFormat) {
 	}
 }
 
-// 不断尝试发送给 Kafka 要求重试消息, Kafka 如果出问题了那就不重试了, 等着用户拉取就行
-func sendMsgToKafka(message []*pbChat.MsgFormat) {
+func (tf *Transfer) sendMsgToDB(message []*pbChat.MsgFormat) {
 	for _, m := range message {
-		_, _, err := producer.SendMessage(m, m.RecvID)
+		if err := tf.db.SaveSingleChat(m.RecvID, m); err != nil {
+			tf.retryWriteDB([]*pbChat.MsgFormat{m})
+		}
+	}
+}
+
+// 不断尝试发送给 Kafka 要求重新推送到 Push, Kafka 如果出问题了那就不重试了, 等着用户拉取就行
+func (tf *Transfer) retryPush(message []*pbChat.MsgFormat) {
+	for _, m := range message {
+		_, _, err := tf.retryPushProducer.SendMessage(m, m.RecvID)
 		if err != nil {
 			logger.Errorf("Failed to send retry message to kafka | message %v | error %v", message, err)
+		}
+	}
+}
+
+// 不断尝试发送给 Kafka 要求重新推送到 DB. 必须不断重试, 以求成功推送到 Kafka
+func (tf *Transfer) retryWriteDB(message []*pbChat.MsgFormat) {
+	for _, m := range message {
+		for {
+			_, _, err := tf.retryDBProducer.SendMessage(m, m.RecvID)
+			if err != nil {
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
+			break
 		}
 	}
 }

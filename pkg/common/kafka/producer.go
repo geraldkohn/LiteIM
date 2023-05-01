@@ -13,18 +13,25 @@ type Producer struct {
 	Producer sarama.SyncProducer
 }
 
-func NewKafkaProducer(topic string) *Producer {
+type KafkaProducerConfig struct {
+	BrokerAddr   []string
+	SASLUsername string
+	SASLPassword string
+	Topic        string
+}
+
+func NewKafkaProducer(kc KafkaProducerConfig) *Producer {
 	p := Producer{}
-	p.Topic = topic
+	p.Topic = kc.Topic
 	producerConfig := sarama.NewConfig()
 	producerConfig.Producer.Return.Successes = true
 	producerConfig.Producer.Return.Errors = true
 	if setting.APPSetting.Kafka.SASLUserName != "" && setting.APPSetting.Kafka.SASLPassword != "" {
 		producerConfig.Net.SASL.Enable = true
-		producerConfig.Net.SASL.User = setting.APPSetting.Kafka.SASLUserName
-		producerConfig.Net.SASL.Password = setting.APPSetting.Kafka.SASLPassword
+		producerConfig.Net.SASL.User = kc.SASLUsername
+		producerConfig.Net.SASL.Password = kc.SASLPassword
 	}
-	producer, err := sarama.NewSyncProducer(setting.APPSetting.Kafka.BrokerAddr, producerConfig)
+	producer, err := sarama.NewSyncProducer(kc.BrokerAddr, producerConfig)
 	if err != nil {
 		panic(err.Error())
 		return nil
