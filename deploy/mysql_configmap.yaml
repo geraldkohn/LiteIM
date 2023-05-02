@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: app-namespace
+  labels:
+    app: mysql
+data:
+  MYSQL_ROOT_PASSWORD: root
