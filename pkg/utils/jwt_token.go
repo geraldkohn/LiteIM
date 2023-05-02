@@ -4,7 +4,10 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/geraldkohn/im/pkg/common/setting"
+)
+
+const (
+	jwtSecret string = "jwt-secret"
 )
 
 type Claims struct {
@@ -24,13 +27,14 @@ func GenerateToken(userID string) (string, error) {
 	}
 
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err := tokenClaims.SignedString([]byte(setting.APPSetting.Auth.JwtSecret))
+	token, err := tokenClaims.SignedString([]byte(jwtSecret))
 	return token, err
 }
 
+// 返回值为 token 填充值, 如果返回空, 则表示 token 过期或无效
 func ParseToken(token string) (string, error) {
 	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(t *jwt.Token) (interface{}, error) {
-		return []byte(setting.APPSetting.Auth.JwtSecret), nil
+		return []byte(jwtSecret), nil
 	})
 
 	if tokenClaims != nil {

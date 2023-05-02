@@ -66,7 +66,7 @@ func (tf *Transfer) handleMsg(msg []byte, msgKey string) error {
 		msgToPushList := make([]*pbChat.MsgFormat, 0)
 		msgToDBList := make([]*pbChat.MsgFormat, 0)
 		for _, gm := range groupMemberList {
-			uid := gm.Uid
+			uid := gm.UserID
 			// 获取最新序列号
 			seq, err := tf.db.IncrUserSeq(uid)
 			if err != nil {

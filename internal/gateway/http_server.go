@@ -6,7 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/geraldkohn/im/pkg/common/setting"
+	"github.com/geraldkohn/im/internal/gateway/httpapi/auth"
+	"github.com/geraldkohn/im/internal/gateway/httpapi/group"
+	"github.com/geraldkohn/im/pkg/common/constant"
+	"github.com/geraldkohn/im/pkg/common/logger"
 	"github.com/geraldkohn/im/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -28,7 +31,7 @@ func (hs *HServer) onInit() {
 }
 
 func (hs *HServer) Run() {
-	addr := ":" + strconv.Itoa(setting.APPSetting.HTTP.Port)
+	addr := ":" + strconv.Itoa(viper.GetInt("HTTPPort"))
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		panic("HTTP Server Listen failed: " + addr)
@@ -41,71 +44,63 @@ func (hs *HServer) Run() {
 
 func initRouter(r *gin.Engine) {
 	r.Use(utils.CorsHandler())
+	r.Use(TokenHandler())
+
 	// user routing group, which handles user registration and login services
-	userRouterGroup := r.Group("/user")
-	{
-		userRouterGroup.POST("/update_user_info", user.UpdateUserInfo)
-		userRouterGroup.POST("/get_user_info", user.GetUserInfo)
-	}
+	// userRouterGroup := r.Group("/user")
+
 	//friend routing group
-	friendRouterGroup := r.Group("/friend")
-	{
-		friendRouterGroup.POST("/get_friends_info", friend.GetFriendsInfo)
-		friendRouterGroup.POST("/add_friend", friend.AddFriend)
-		friendRouterGroup.POST("/get_friend_apply_list", friend.GetFriendApplyList)
-		friendRouterGroup.POST("/get_self_apply_list", friend.GetSelfApplyList)
-		friendRouterGroup.POST("/get_friend_list", friend.GetFriendList)
-		friendRouterGroup.POST("/add_blacklist", friend.AddBlacklist)
-		friendRouterGroup.POST("/get_blacklist", friend.GetBlacklist)
-		friendRouterGroup.POST("/remove_blacklist", friend.RemoveBlacklist)
-		friendRouterGroup.POST("/delete_friend", friend.DeleteFriend)
-		friendRouterGroup.POST("/add_friend_response", friend.AddFriendResponse)
-		friendRouterGroup.POST("/set_friend_comment", friend.SetFriendComment)
-		friendRouterGroup.POST("/is_friend", friend.IsFriend)
-		friendRouterGroup.POST("/import_friend", friend.ImportFriend)
-	}
+	// friendRouterGroup := r.Group("/friend")
+
 	//group related routing group
 	groupRouterGroup := r.Group("/group")
 	{
-		groupRouterGroup.POST("/create_group", group.CreateGroup)
-		groupRouterGroup.POST("/set_group_info", group.SetGroupInfo)
+		groupRouterGroup.POST("create_group", group.CreateGroup)
 		groupRouterGroup.POST("join_group", group.JoinGroup)
-		groupRouterGroup.POST("/quit_group", group.QuitGroup)
-		groupRouterGroup.POST("/group_application_response", group.ApplicationGroupResponse)
-		groupRouterGroup.POST("/transfer_group", group.TransferGroupOwner)
-		groupRouterGroup.POST("/get_group_applicationList", group.GetGroupApplicationList)
-		groupRouterGroup.POST("/get_groups_info", group.GetGroupsInfo)
-		groupRouterGroup.POST("/kick_group", group.KickGroupMember)
-		groupRouterGroup.POST("/get_group_member_list", group.GetGroupMemberList)
-		groupRouterGroup.POST("/get_group_all_member_list", group.GetGroupAllMember)
-		groupRouterGroup.POST("/get_group_members_info", group.GetGroupMembersInfo)
-		groupRouterGroup.POST("/invite_user_to_group", group.InviteUserToGroup)
-		groupRouterGroup.POST("/get_joined_group_list", group.GetJoinedGroupList)
+		groupRouterGroup.POST("get_group_info", group.GetGroupInfo)
+		groupRouterGroup.POST("list_user_group", group.ListUserGroup)
 	}
 	//certificate
 	authRouterGroup := r.Group("/auth")
 	{
-		authRouterGroup.POST("/user_register", apiAuth.UserRegister)
-		authRouterGroup.POST("/user_token", apiAuth.UserToken)
+		authRouterGroup.POST("/user_register", auth.UserRegister)
+		authRouterGroup.POST("/user_login", auth.UserLogin)
 	}
-	//Third service
-	thirdGroup := r.Group("/third")
-	{
-		thirdGroup.POST("/tencent_cloud_storage_credential", apiThird.TencentCloudStorageCredential)
-	}
-	//Message
-	chatGroup := r.Group("/chat")
-	{
-		chatGroup.POST("/newest_seq", apiChat.UserGetSeq)
-		chatGroup.POST("/pull_msg", apiChat.UserPullMsg)
-		chatGroup.POST("/send_msg", apiChat.UserSendMsg)
-		chatGroup.POST("/pull_msg_by_seq", apiChat.UserPullMsgBySeqList)
-	}
-	//Manager
-	managementGroup := r.Group("/manager")
-	{
-		managementGroup.POST("/delete_user", manage.DeleteUser)
-		managementGroup.POST("/send_msg", manage.ManagementSendMsg)
-		managementGroup.POST("/get_all_users_uid", manage.GetAllUsersUid)
+}
+
+func TokenHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenStr := c.GetHeader("Authorization")
+		if tokenStr == "" {
+			logger.Errorf("token handler failed to get Authorization")
+			c.JSON(http.StatusOK, gin.H{
+				"ErrorCode": constant.ErrGetToken.ErrCode,
+				"ErrorMsg":  constant.ErrGetToken.ErrMsg,
+				"data":      nil,
+			})
+			return
+		}
+		claim, err := utils.ParseToken(tokenStr)
+		if err != nil {
+			logger.Errorf("token handler failed to parse Authorization")
+			c.JSON(http.StatusOK, gin.H{
+				"ErrorCode": constant.ErrParseToken.ErrCode,
+				"ErrorMsg":  constant.ErrParseToken.ErrMsg,
+				"data":      nil,
+			})
+			return
+		}
+		if claim == "" {
+			logger.Infof("token handler parsed an unavailble token")
+			c.JSON(http.StatusOK, gin.H{
+				"ErrorCode": constant.ErrUnavailableToken.ErrCode,
+				"ErrorMsg":  constant.ErrUnavailableToken.ErrMsg,
+				"data":      nil,
+			})
+			return
+		}
+		logger.Infof("token handler parsed an unavailble token")
+		c.Set("uid", claim)
+		c.Next()
 	}
 }

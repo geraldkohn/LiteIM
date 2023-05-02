@@ -4,6 +4,7 @@ import (
 	"net"
 	"os"
 
+	database "github.com/geraldkohn/im/internal/gateway/database"
 	"github.com/geraldkohn/im/pkg/common/db"
 	"github.com/geraldkohn/im/pkg/common/logger"
 	"github.com/spf13/viper"
@@ -13,7 +14,6 @@ var (
 	hServer    *HServer
 	wServer    *WServer
 	pushServer *GServer
-	database   *db.DataBases
 	nodeIP     string
 )
 
@@ -48,7 +48,7 @@ func initNodeIP() {
 }
 
 func initDataBases() {
-	database = db.NewDataBases(
+	database.Databases = db.NewDataBases(
 		db.MysqlConfig{
 			Addr:     viper.GetString("MysqlAddr"),
 			Username: viper.GetString("MysqlUsername"),

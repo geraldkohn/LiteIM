@@ -9,6 +9,7 @@ import (
 	"time"
 
 	pbChat "github.com/geraldkohn/im/internal/api/rpc/chat"
+	database "github.com/geraldkohn/im/internal/gateway/database"
 	"github.com/geraldkohn/im/pkg/common/constant"
 	"github.com/geraldkohn/im/pkg/common/cronjob"
 	"github.com/geraldkohn/im/pkg/common/kafka"
@@ -85,13 +86,13 @@ func (ws *WServer) wsHandler(w http.ResponseWriter, r *http.Request) {
 // 新增 用户--Gateway 映射
 func (ws *WServer) online(userID string) {
 	endpoint := fmt.Sprintf("%s:%d", nodeIP, viper.GetInt("GRPCPort"))
-	_, err := database.SetOnlineUserGatewayEndpoint(userID, endpoint)
+	_, err := database.Databases.SetOnlineUserGatewayEndpoint(userID, endpoint)
 	logger.Errorf("Failed to bind online user to gateway endpoint | error %v", err)
 }
 
 // 删除 用户--Gateway 映射
 func (ws *WServer) offline(userID string) {
-	_, err := database.DeleteOnlineUserGatewayEndpoint(userID)
+	_, err := database.Databases.DeleteOnlineUserGatewayEndpoint(userID)
 	logger.Errorf("Failed to Debind online user to gateway endpoint | error %v", err)
 }
 

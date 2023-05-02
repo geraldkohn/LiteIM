@@ -1,7 +1,5 @@
 package db
 
-import "time"
-
 type Group struct {
 	GroupID    string `gorm:"column:group_id"`
 	Name       string `gorm:"name"`
@@ -9,9 +7,9 @@ type Group struct {
 }
 
 type GroupMember struct {
-	GroupID  string    `gorm:"column:group_id"`
-	Uid      string    `gorm:"column:uid"`
-	JoinTime time.Time `gorm:"column:join_time"`
+	GroupID  string `gorm:"column:group_id"`
+	UserID   string `gorm:"column:user_id"`
+	JoinTime int64  `gorm:"column:join_time"`
 }
 
 func (g *Group) TableName() string {
@@ -36,6 +34,13 @@ func (d *DataBases) CreateGroupMember(gm *GroupMember) error {
 func (d *DataBases) GetGroupMemberByGroupID(groupID string) ([]*GroupMember, error) {
 	groupMemberList := make([]*GroupMember, 0)
 	conds := map[string]interface{}{"group_id": groupID}
+	err := getListBatch(d.mysql, groupMemberList, "", -1, -1, conds)
+	return groupMemberList, err
+}
+
+func (d *DataBases) GetGroupByUserID(userID string) ([]*GroupMember, error) {
+	groupMemberList := make([]*GroupMember, 0)
+	conds := map[string]interface{}{"user_id": userID}
 	err := getListBatch(d.mysql, groupMemberList, "", -1, -1, conds)
 	return groupMemberList, err
 }

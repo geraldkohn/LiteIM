@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	pbChat "github.com/geraldkohn/im/internal/api/rpc/chat"
+	database "github.com/geraldkohn/im/internal/gateway/database"
 	"github.com/geraldkohn/im/pkg/common/constant"
 	"github.com/geraldkohn/im/pkg/common/logger"
 	"github.com/geraldkohn/im/pkg/utils"
@@ -13,7 +14,7 @@ import (
 
 func (ws *WServer) getUserMaxSeq(conn *UserConn, userID string, req *pbChat.GetUserMaxSeqRequest) {
 	logger.Infof("ask to get user max sequence, userID: %s", userID)
-	seq, err := database.GetUserMaxSeq(userID)
+	seq, err := database.Databases.GetUserMaxSeq(userID)
 	if err != nil {
 		glog.Errorf("failed to get user max sequence, error: %v", err)
 		ws.writeMsg(conn, constant.ActionWSGetUserMaxSeq, constant.ErrRedis.ErrCode, constant.ErrRedis.ErrMsg, []byte{})
@@ -26,7 +27,7 @@ func (ws *WServer) getUserMaxSeq(conn *UserConn, userID string, req *pbChat.GetU
 
 func (ws *WServer) pullMsgBySeqRange(conn *UserConn, userID string, req *pbChat.PullMsgBySeqRangeRequest) {
 	logger.Infof("ask to pull msg by seq range, userID: %v, range: %v-%v", userID, req.SeqBegin, req.SeqEnd)
-	result, err := database.GetMsgBySeqRange(userID, req.SeqBegin, req.SeqEnd)
+	result, err := database.Databases.GetMsgBySeqRange(userID, req.SeqBegin, req.SeqEnd)
 	if err != nil {
 		ws.writeMsg(conn, constant.ActionWSPullMsgBySeqRange, constant.ErrMongo.ErrCode, constant.ErrMongo.ErrMsg, []byte{})
 		logger.Errorf("failed to get message by seq range from monogoDB, error: %v", err)
@@ -40,7 +41,7 @@ func (ws *WServer) pullMsgBySeqRange(conn *UserConn, userID string, req *pbChat.
 
 func (ws *WServer) pullMsgBySeqList(conn *UserConn, userID string, req *pbChat.PullMsgBySeqListRequest) {
 	logger.Infof("ask to pull msg by seq list, userID: %v, reqList: %v", userID, req.SeqList)
-	result, err := database.GetMsgBySeqList(userID, req.SeqList)
+	result, err := database.Databases.GetMsgBySeqList(userID, req.SeqList)
 	if err != nil {
 		ws.writeMsg(conn, constant.ActionWSPullMsgBySeqList, constant.ErrMongo.ErrCode, constant.ErrMongo.ErrMsg, []byte{})
 		logger.Errorf("failed to get message by seq range from monogoDB, error: %v", err)

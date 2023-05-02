@@ -14,7 +14,9 @@ var (
 	ErrKafka             = ErrInfo{130, ""}
 	ErrParseToken        = ErrInfo{200, "Parse token failed"}
 	ErrCreateToken       = ErrInfo{201, "Create token failed"}
-	ErrUnMarshalProto    = ErrInfo{202, "UnMarshal protobuf failed"}
+	ErrGetToken          = ErrInfo{202, "Get token failed"}
+	ErrUnavailableToken  = ErrInfo{203, "Unavailable token"}
+	ErrUnMarshalProto    = ErrInfo{204, "UnMarshal protobuf failed"}
 	ErrAppServerKey      = ErrInfo{300, "key error"}
 	ErrTencentCredential = ErrInfo{400, ""}
 
