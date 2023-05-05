@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/geraldkohn/im/pkg/common/setting"
+	"Lite_IM/pkg/common/setting"
+
 	"gotest.tools/v3/assert"
 )
 

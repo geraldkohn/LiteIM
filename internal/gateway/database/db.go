@@ -1,6 +1,6 @@
 package db
 
-import "github.com/geraldkohn/im/pkg/common/db"
+import "Lite_IM/pkg/common/db"
 
 var (
 	Databases *db.DataBases

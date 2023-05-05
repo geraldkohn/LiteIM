@@ -3,7 +3,8 @@ package db
 import (
 	"context"
 
-	pbChat "github.com/geraldkohn/im/internal/api/rpc/chat"
+	pbChat "Lite_IM/internal/api/rpc/chat"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"google.golang.org/protobuf/proto"
 )

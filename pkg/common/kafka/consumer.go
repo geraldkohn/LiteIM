@@ -3,8 +3,9 @@ package kafka
 import (
 	"sync"
 
+	"Lite_IM/pkg/common/setting"
+
 	"github.com/Shopify/sarama"
-	"github.com/geraldkohn/im/pkg/common/setting"
 )
 
 type Consumer struct {

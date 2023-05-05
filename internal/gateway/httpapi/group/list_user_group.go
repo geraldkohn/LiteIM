@@ -3,9 +3,10 @@ package group
 import (
 	"net/http"
 
-	database "github.com/geraldkohn/im/internal/gateway/database"
-	"github.com/geraldkohn/im/pkg/common/constant"
-	"github.com/geraldkohn/im/pkg/common/logger"
+	database "Lite_IM/internal/gateway/database"
+	"Lite_IM/pkg/common/constant"
+	"Lite_IM/pkg/common/logger"
+
 	"github.com/gin-gonic/gin"
 )
 

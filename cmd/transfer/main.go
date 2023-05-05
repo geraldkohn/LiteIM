@@ -1,6 +1,6 @@
 package main
 
-import "github.com/geraldkohn/im/internal/transfer"
+import "Lite_IM/internal/transfer"
 
 func main() {
 	transfer.Run()

@@ -6,11 +6,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/geraldkohn/im/internal/gateway/httpapi/auth"
-	"github.com/geraldkohn/im/internal/gateway/httpapi/group"
-	"github.com/geraldkohn/im/pkg/common/constant"
-	"github.com/geraldkohn/im/pkg/common/logger"
-	"github.com/geraldkohn/im/pkg/utils"
+	"Lite_IM/internal/gateway/httpapi/auth"
+	"Lite_IM/internal/gateway/httpapi/group"
+	"Lite_IM/pkg/common/constant"
+	"Lite_IM/pkg/common/logger"
+	"Lite_IM/pkg/utils"
+
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 )

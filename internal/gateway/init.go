@@ -4,9 +4,10 @@ import (
 	"net"
 	"os"
 
-	database "github.com/geraldkohn/im/internal/gateway/database"
-	"github.com/geraldkohn/im/pkg/common/db"
-	"github.com/geraldkohn/im/pkg/common/logger"
+	database "Lite_IM/internal/gateway/database"
+	"Lite_IM/pkg/common/db"
+	"Lite_IM/pkg/common/logger"
+
 	"github.com/spf13/viper"
 )
 

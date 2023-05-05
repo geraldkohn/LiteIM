@@ -1,4 +1,4 @@
-module github.com/geraldkohn/im
+module Lite_IM
 
 go 1.20
 

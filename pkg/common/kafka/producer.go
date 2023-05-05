@@ -1,9 +1,10 @@
 package kafka
 
 import (
+	"Lite_IM/pkg/common/logger"
+	"Lite_IM/pkg/common/setting"
+
 	"github.com/Shopify/sarama"
-	"github.com/geraldkohn/im/pkg/common/logger"
-	"github.com/geraldkohn/im/pkg/common/setting"
 	"github.com/golang/glog"
 	"google.golang.org/protobuf/proto"
 )

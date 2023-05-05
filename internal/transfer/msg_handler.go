@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
-	pbChat "github.com/geraldkohn/im/internal/api/rpc/chat"
-	"github.com/geraldkohn/im/pkg/common/constant"
-	"github.com/geraldkohn/im/pkg/common/logger"
+	pbChat "Lite_IM/internal/api/rpc/chat"
+	"Lite_IM/pkg/common/constant"
+	"Lite_IM/pkg/common/logger"
+
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 )

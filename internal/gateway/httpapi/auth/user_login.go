@@ -3,10 +3,11 @@ package auth
 import (
 	"net/http"
 
-	database "github.com/geraldkohn/im/internal/gateway/database"
-	"github.com/geraldkohn/im/pkg/common/constant"
-	"github.com/geraldkohn/im/pkg/common/logger"
-	"github.com/geraldkohn/im/pkg/utils"
+	database "Lite_IM/internal/gateway/database"
+	"Lite_IM/pkg/common/constant"
+	"Lite_IM/pkg/common/logger"
+	"Lite_IM/pkg/utils"
+
 	"github.com/gin-gonic/gin"
 )
 

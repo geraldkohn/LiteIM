@@ -9,7 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/geraldkohn/im/pkg/common/setting"
+	"Lite_IM/pkg/common/setting"
+
 	"github.com/golang/glog"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	etcd "go.etcd.io/etcd/client/v3"

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/geraldkohn/im/internal/gateway"
+import "Lite_IM/internal/gateway"
 
 func main() {
 	gateway.Run()

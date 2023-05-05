@@ -1,6 +1,6 @@
 package main
 
-import "github.com/geraldkohn/im/internal/pusher"
+import "Lite_IM/internal/pusher"
 
 func main() {
 	pusher.Run()

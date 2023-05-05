@@ -2,11 +2,11 @@
 
 ## 简介
 
-IM 是一个即时通讯服务器. 传输协议为 Websocket. IM 扩展性较好, 无需修改服务端代码即可扩展自定义消息. 通过 IM, 可以快速将即时通讯和网络能力集成到自己的应用中. 
+LiteIM 是一个即时通讯服务器. 传输协议为 Websocket. 扩展性较好, 无需修改服务端代码即可扩展自定义消息. 通过 LiteIM, 可以快速将即时通讯和网络能力集成到自己的应用中. 
 
 ## 安装 IM
 
-> IM 依赖五个开源高性能组件: ETCD, MySQL, MongoDB, Redis 和 Kafka. 私有化部署 IM 前, 请确保五个组件已经安装.
+> LiteIM 依赖五个开源高性能组件: ETCD, MySQL, MongoDB, Redis 和 Kafka. 私有化部署 IM 前, 请确保五个组件已经安装.
 
 ### Docker 部署
 
