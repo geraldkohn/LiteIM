@@ -75,7 +75,8 @@ func (d *DataBases) initMongoDB(mdc MongodbConfig) {
 	var cred options.Credential
 	cred.Username = mdc.Username
 	cred.Password = mdc.Password
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	dsn := fmt.Sprintf("mongodb://%s", mdc.Addr[0])
 	d.mongo, err = mongo.Connect(ctx, options.Client().ApplyURI(dsn).SetAuth(cred))
 	if err != nil {

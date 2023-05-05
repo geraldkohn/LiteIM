@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	pbChat "Lite_IM/internal/api/rpc/chat"
 
@@ -72,6 +73,33 @@ func (d *DataBases) SaveSingleChat(uid string, msg *pbChat.MsgFormat) error {
 		Msg: b,
 	}
 	_, err = collection.InsertOne(context.TODO(), userChat)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 直接存储多个用户消息
+func (d *DataBases) SaveMultiChat(uidList []*string, msgList []*pbChat.MsgFormat) error {
+	var err error
+	if len(uidList) != len(msgList) {
+		return fmt.Errorf("length of uidList is not as same as length of msgList")
+	}
+	length := len(uidList)
+	userChatList := make([]interface{}, length)
+	for i := 0; i < length; i++ {
+		b, err := proto.Marshal(msgList[i])
+		if err != nil {
+			return err
+		}
+		userChatList[i] = UserChat{
+			UID: *uidList[i],
+			Seq: msgList[i].Sequence,
+			Msg: b,
+		}
+	}
+	collection := d.mongo.Database(mongodbDataBase).Collection(collectionChat)
+	_, err = collection.InsertMany(context.TODO(), userChatList, nil)
 	if err != nil {
 		return err
 	}

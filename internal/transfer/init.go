@@ -62,7 +62,6 @@ func (tf *Transfer) initialize() {
 	}
 	tf.consumerHandler.topicHandle[viper.GetString("KafkaMsgTopic")] = tf.handleMsg
 	tf.consumerHandler.topicHandle[viper.GetString("KafkaRetryPushTopic")] = tf.handleRetryPush
-	tf.consumerHandler.topicHandle[viper.GetString("KafkaRetryDBTopic")] = tf.handleRetryDB
 }
 
 // 阻塞函数

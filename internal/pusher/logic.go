@@ -8,6 +8,7 @@ import (
 	"Lite_IM/pkg/common/logger"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func (ps *grpcServer) PushMsgToPusher(ctx context.Context, req *pbChat.PushMsgToPusherRequest) (*pbChat.PushMsgToPusherResponse, error) {
@@ -27,7 +28,7 @@ func (ps *grpcServer) PushMsgToPusher(ctx context.Context, req *pbChat.PushMsgTo
 	}
 	// 用户在线时
 	// 调用 gateway grpc 接口发送消息
-	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+	conn, err := grpc.Dial(endpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Errorf("Failed to connect to gateway-grpc-server | error %v", err)
 		return &pbChat.PushMsgToPusherResponse{UserOnline: true, GatewayEndpoint: endpoint, ErrCode: constant.ErrConnectionFailed.ErrCode, ErrMsg: constant.ErrConnectionFailed.ErrMsg}, err
