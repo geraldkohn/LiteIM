@@ -154,6 +154,7 @@ func (tf *Transfer) sendSingleMsgToPush(message *pbChat.MsgFormat) {
 		logger.Errorf("Failed to send to push client | error %v", err)
 	}
 	if pushMsgResp.ErrCode != 0 {
+		tf.retrySinglePush(message)
 		logger.Errorf("Push-server failed to push message to gateway or user failed to receive | message %v | error %v", message, err)
 	}
 }
