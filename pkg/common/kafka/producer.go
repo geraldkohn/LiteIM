@@ -1,8 +1,8 @@
 package kafka
 
 import (
-	"Lite_IM/pkg/common/logger"
-	"Lite_IM/pkg/common/setting"
+	"LiteIM/pkg/common/logger"
+	"LiteIM/pkg/common/setting"
 
 	"github.com/Shopify/sarama"
 	"github.com/golang/glog"

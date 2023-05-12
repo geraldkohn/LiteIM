@@ -3,11 +3,11 @@ package gateway
 import (
 	"fmt"
 
-	pbChat "Lite_IM/internal/api/rpc/chat"
-	database "Lite_IM/internal/gateway/database"
-	"Lite_IM/pkg/common/constant"
-	"Lite_IM/pkg/common/logger"
-	"Lite_IM/pkg/utils"
+	pbChat "LiteIM/internal/api/rpc/chat"
+	database "LiteIM/internal/gateway/database"
+	"LiteIM/pkg/common/constant"
+	"LiteIM/pkg/common/logger"
+	"LiteIM/pkg/utils"
 
 	"github.com/golang/glog"
 	"google.golang.org/protobuf/proto"

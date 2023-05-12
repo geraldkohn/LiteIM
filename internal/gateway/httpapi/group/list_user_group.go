@@ -3,9 +3,9 @@ package group
 import (
 	"net/http"
 
-	database "Lite_IM/internal/gateway/database"
-	"Lite_IM/pkg/common/constant"
-	"Lite_IM/pkg/common/logger"
+	database "LiteIM/internal/gateway/database"
+	"LiteIM/pkg/common/constant"
+	"LiteIM/pkg/common/logger"
 
 	"github.com/gin-gonic/gin"
 )

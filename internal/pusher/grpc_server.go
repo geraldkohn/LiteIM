@@ -4,8 +4,8 @@ import (
 	"net"
 	"strconv"
 
-	pbChat "Lite_IM/internal/api/rpc/chat"
-	"Lite_IM/pkg/common/logger"
+	pbChat "LiteIM/internal/api/rpc/chat"
+	"LiteIM/pkg/common/logger"
 
 	"google.golang.org/grpc"
 )

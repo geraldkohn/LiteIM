@@ -3,9 +3,9 @@ package transfer
 import (
 	"context"
 
-	pbChat "Lite_IM/internal/api/rpc/chat"
-	"Lite_IM/pkg/common/constant"
-	"Lite_IM/pkg/common/logger"
+	pbChat "LiteIM/internal/api/rpc/chat"
+	"LiteIM/pkg/common/constant"
+	"LiteIM/pkg/common/logger"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

@@ -4,9 +4,9 @@ import (
 	"net"
 	"os"
 
-	database "Lite_IM/internal/gateway/database"
-	"Lite_IM/pkg/common/db"
-	"Lite_IM/pkg/common/logger"
+	database "LiteIM/internal/gateway/database"
+	"LiteIM/pkg/common/db"
+	"LiteIM/pkg/common/logger"
 
 	"github.com/spf13/viper"
 )

@@ -3,10 +3,10 @@ package transfer
 import (
 	"context"
 
-	"Lite_IM/pkg/common/db"
-	"Lite_IM/pkg/common/kafka"
-	"Lite_IM/pkg/common/logger"
-	servicediscovery "Lite_IM/pkg/common/service-discovery"
+	"LiteIM/pkg/common/db"
+	"LiteIM/pkg/common/kafka"
+	"LiteIM/pkg/common/logger"
+	servicediscovery "LiteIM/pkg/common/service-discovery"
 
 	"github.com/Shopify/sarama"
 	"github.com/spf13/viper"

@@ -4,8 +4,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"Lite_IM/pkg/common/cronjob"
-	"Lite_IM/pkg/common/logger"
+	"LiteIM/pkg/common/cronjob"
+	"LiteIM/pkg/common/logger"
 
 	"github.com/gorilla/websocket"
 )

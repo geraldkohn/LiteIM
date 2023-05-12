@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"Lite_IM/pkg/common/setting"
+	"LiteIM/pkg/common/setting"
 
 	"gotest.tools/v3/assert"
 )

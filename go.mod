@@ -1,4 +1,4 @@
-module Lite_IM
+module LiteIM
 
 go 1.20
 

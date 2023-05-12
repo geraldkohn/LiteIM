@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	"Lite_IM/internal/gateway/httpapi/auth"
-	"Lite_IM/internal/gateway/httpapi/group"
-	"Lite_IM/pkg/common/constant"
-	"Lite_IM/pkg/common/logger"
-	"Lite_IM/pkg/utils"
+	"LiteIM/internal/gateway/httpapi/auth"
+	"LiteIM/internal/gateway/httpapi/group"
+	"LiteIM/pkg/common/constant"
+	"LiteIM/pkg/common/logger"
+	"LiteIM/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"

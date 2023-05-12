@@ -5,9 +5,9 @@ import (
 	"net"
 	"os"
 
-	"Lite_IM/pkg/common/db"
-	"Lite_IM/pkg/common/logger"
-	servicediscovery "Lite_IM/pkg/common/service-discovery"
+	"LiteIM/pkg/common/db"
+	"LiteIM/pkg/common/logger"
+	servicediscovery "LiteIM/pkg/common/service-discovery"
 
 	"github.com/spf13/viper"
 )

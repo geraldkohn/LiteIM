@@ -3,7 +3,7 @@ package kafka
 import (
 	"sync"
 
-	"Lite_IM/pkg/common/setting"
+	"LiteIM/pkg/common/setting"
 
 	"github.com/Shopify/sarama"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	pbChat "Lite_IM/internal/api/rpc/chat"
+	pbChat "LiteIM/internal/api/rpc/chat"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"google.golang.org/protobuf/proto"

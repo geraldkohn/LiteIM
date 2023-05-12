@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"Lite_IM/pkg/common/setting"
+	"LiteIM/pkg/common/setting"
 )
 
 func TestRegister(t *testing.T) {

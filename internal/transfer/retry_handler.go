@@ -1,8 +1,8 @@
 package transfer
 
 import (
-	pbChat "Lite_IM/internal/api/rpc/chat"
-	"Lite_IM/pkg/common/logger"
+	pbChat "LiteIM/internal/api/rpc/chat"
+	"LiteIM/pkg/common/logger"
 
 	"google.golang.org/protobuf/proto"
 )

@@ -3,10 +3,10 @@ package auth
 import (
 	"net/http"
 
-	database "Lite_IM/internal/gateway/database"
-	"Lite_IM/pkg/common/constant"
-	"Lite_IM/pkg/common/logger"
-	"Lite_IM/pkg/utils"
+	database "LiteIM/internal/gateway/database"
+	"LiteIM/pkg/common/constant"
+	"LiteIM/pkg/common/logger"
+	"LiteIM/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 )
