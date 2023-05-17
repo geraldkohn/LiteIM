@@ -8,17 +8,17 @@
     "WebsocketPort": 8022,
     "WebsocketTimeout": 10,
 
-    "KafkaBrokerAddr": ["kafka-0.kafka-headless:9092", "kafka-1.kafka-headless:9092", "kafka-3.kafka-headless:9092"],
+    "KafkaBrokerAddr": ["kafka-sts-0.kafka-svc:9092"],
     "KafkaSASLUsername": "kafkacli",
     "KafkaSASLPassword": "kafkaclipws",
     "KafkaMsgTopic": "chat",
-    "MysqlAddr": "mysql-0.mysql:3306",
+    "MysqlAddr": "mysql-sts-0.mysql-svc:3306",
     "MysqlUsername": "root",
     "MysqlPassword": "root",
-    "RedisAddr": "redis-0.redis:6379",
+    "RedisAddr": "redis-sts-0.redis-svc:6379",
     "RedisUsername": "root",
     "RedisPassword": "root",
-    "MongoAddr": "",
+    "MongoAddr": "mongo-sts-0.mongo-svc:27017",
     "MongoUsername": "root",
     "MongoPassword": "root"
 }

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-sts
+  namespace: geraldkohn
+spec:
+  selector:
+    matchLabels:
+      app: redis-sts
+  serviceName: redis-svc
+  replicas: 1
+
+  template:
+    metadata:
+      labels:
+        app: redis-sts
+    spec:
+      containers:
+      - name: redis
+        image: redis:5-alpine
+        ports:
+        - containerPort: 6379
+          name: client
+        volumeMounts:
+        - name: redis-local-1g-pvc
+          mountPath: /data
+
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-local-1g-pvc
+      namespace: geraldkohn
+    spec:
+      storageClassName: redis-storage-class
+      accessModes: 
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi

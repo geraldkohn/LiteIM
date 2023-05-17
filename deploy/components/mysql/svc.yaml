@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-svc
+  namespace: geraldkohn
+spec:
+  selector:
+    app: mysql-sts
+  ports:
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP
+    name: mysql
+  clusterIP: None

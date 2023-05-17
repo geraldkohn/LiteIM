@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"LiteIM/pkg/common/db"
 	"LiteIM/pkg/common/logger"
@@ -52,7 +54,6 @@ type Pusher struct {
 	pushRegister     servicediscovery.Register
 	gatewayDiscovery servicediscovery.Discovery
 	db               *db.DataBases
-	exit             chan error
 }
 
 func (p *Pusher) initialize() {
@@ -81,7 +82,6 @@ func (p *Pusher) initialize() {
 			Password: viper.GetString("MongoPassword"),
 		},
 	)
-	p.exit = make(chan error)
 }
 
 func Run() {
@@ -91,12 +91,13 @@ func Run() {
 	go p.pushRegister.Run()
 	go p.gatewayDiscovery.Watch()
 	go p.grpcServer.Run()
-	<-p.exit
+
+	// 实现优雅关闭
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
 	p.pushRegister.Exit()
 	p.gatewayDiscovery.Exit()
 	p.grpcServer.Exit()
-}
-
-func Exit() {
-	close(p.exit)
 }

@@ -2,6 +2,9 @@ package transfer
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"LiteIM/pkg/common/db"
 	"LiteIM/pkg/common/kafka"
@@ -20,7 +23,6 @@ type Transfer struct {
 	db                *db.DataBases              // DB
 	retryPushProducer *kafka.Producer            // 发送给 Push 失败的消息重写入 kafka
 	retryDBProducer   *kafka.Producer            // 写入 DB 失败的消息重写入 kafka
-	exit              chan error                 // 终止信号
 }
 
 func (tf *Transfer) initialize() {
@@ -70,14 +72,14 @@ func Run() {
 	ctx, cancel := context.WithCancel(context.Background())
 	go tfer.pushDiscovery.Watch()                                                 // 监听服务发现
 	go tfer.consumerHandler.RegisterHandleAndConsumer(ctx, &tfer.consumerHandler) // 将消费者组注册
-	<-tfer.exit
+
+	// 实现优雅关闭
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
 	cancel()
 	tfer.pushDiscovery.Exit()
-}
-
-// 退出
-func Exit() {
-	close(tfer.exit)
 }
 
 type handle func(value []byte, key string) error // 处理函数, 处理接收到的消息

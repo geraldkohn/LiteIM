@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka-sts
+  namespace: geraldkohn
+spec:
+  selector:
+    matchLabels:
+      app: kafka-sts
+  serviceName: kafka-svc
+  replicas: 1
+
+  template:
+    metadata:
+      labels:
+        app: kafka-sts
+    spec:
+      containers:
+      - name: kafka
+        image: k8s.gcr.io/nginx-slim:0.8
+        ports:
+        - containerPort: 9092
+          name: kafka
+        volumeMounts:
+        - name: kafka-local-1g-pvc
+          mountPath: /data
+
+  volumeClaimTemplates:
+  - metadata:
+      name: kafka-local-1g-pvc
+      namespace: geraldkohn
+    spec:
+      storageClassName: kafka-storage-class
+      accessModes: 
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi

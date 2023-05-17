@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-local-1g-pv
+  namespace: geraldkohn
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: mongo-storage-class
+  hostPath:
+    path: /tmp/data/mongo

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: etcd-sts
+  namespace: geraldkohn
+spec:
+  selector:
+    matchLabels:
+      app: etcd-sts
+  serviceName: etcd-svc
+  replicas: 1
+
+  volumeClaimTemplates:
+  - metadata:
+      name: etcd-local-1g-pvc
+      namespace: geraldkohn
+    spec:
+      storageClassName: etcd-storage-class
+      accessModes: 
+      - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 1Gi
+
+  template:
+    metadata:
+      labels:
+        app: etcd-sts
+    spec:
+      containers:
+      - name: etcd
+        image: quay.io/coreos/etcd:v3.2.3
+        ports:
+        - containerPort: 2379
+          name: client
+        - containerPort: 2380
+          name: peer
+        volumeMounts:
+        - name: etcd-local-1g-pvc
+          mountPath: /data  #容器内挂载路径
+        env:
+        - name: HOST_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: CLUSTER_TOKEN
+          value: etcd-token
+        - name: SERVICE_NAME
+          value: etcd-svc
+        command:
+        - /usr/local/bin/etcd
+        args:
+        - --name=$(HOST_NAME)
+        - --data-dir=/data # where etcd stores its data
+        - --listen-peer-urls=http://127.0.0.1:2380 # specifies the URLs on which the etcd node listens for communication with other etcd nodes in the cluster.
+        - --listen-client-urls=http://127.0.0.1:2379 # listens for client requests
+        - --advertise-client-urls=http://$(HOST_NAME).$(SERVICE_NAME):2379 # specifies the publicly visible URLs that clients can use to connect to the etcd cluster. 
+        - --initial-advertise-peer-urls=http://$(HOST_NAME).$(SERVICE_NAME):2380 # specifies the publicly visible URLs that other etcd nodes can use to connect to the etcd cluster.
+        - --initial-cluster-token=$(CLUSTER_TOKEN) # specifies the token used to form the cluster. All etcd nodes in the same cluster must use the same token.
+        - --initial-cluster-state=new # specifies the state of the cluster when the etcd node is started. If set to new, the etcd node will create a new cluster. If set to existing, the etcd node will attempt to join an existing cluster.
+        # - --initial-cluster # specifies the initial list of etcd nodes in the cluster, in the form name=url. For example, etcd-0=http://etcd-0.etcd:2380,etcd-1=http://etcd-1.etcd:2380,etcd-2=http://etcd-2.etcd:2380.

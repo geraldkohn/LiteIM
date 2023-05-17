@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: etcd-local-1g-pv
+  namespace: geraldkohn
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: etcd-storage-class
+  hostPath:
+    path: /tmp/data/etcd
