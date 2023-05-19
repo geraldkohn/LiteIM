@@ -20,10 +20,10 @@ type getGroupInfoResponse struct {
 }
 
 func GetGroupInfo(c *gin.Context) {
-	logger.Infof("http api get_group_info init ...")
+	logger.Logger.Infof("http api get_group_info init ...")
 	params := paramsGetGroupInfo{}
 	if err := c.BindJSON(&params); err != nil {
-		logger.Errorf("http api get_group_info bad request")
+		logger.Logger.Errorf("http api get_group_info bad request")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"ErrorCode": http.StatusBadRequest,
 			"ErrorMsg":  err.Error(),
@@ -35,7 +35,7 @@ func GetGroupInfo(c *gin.Context) {
 	for _, gid := range params.GroupIDList {
 		groupInfo, err := database.Databases.GetGroupByGroupID(gid)
 		if err != nil {
-			logger.Errorf("http api get_group_info failed to get group by groupid, [params %v], [error %v]", params, err)
+			logger.Logger.Errorf("http api get_group_info failed to get group by groupid, [params %v], [error %v]", params, err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"ErrorCode": constant.ErrMysql.ErrCode,
 				"ErrorMsg":  constant.ErrMysql.ErrMsg,
@@ -45,7 +45,7 @@ func GetGroupInfo(c *gin.Context) {
 		}
 		groupsInfo = append(groupsInfo, *groupInfo)
 	}
-	logger.Infof("http api get_group_info succeed, [params %v]", params)
+	logger.Logger.Infof("http api get_group_info succeed, [params %v]", params)
 	c.JSON(http.StatusBadRequest, gin.H{
 		"ErrorCode": constant.OK.ErrCode,
 		"ErrorMsg":  constant.OK.ErrMsg,

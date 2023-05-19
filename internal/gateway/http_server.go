@@ -73,7 +73,7 @@ func TokenHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr := c.GetHeader("Authorization")
 		if tokenStr == "" {
-			logger.Errorf("token handler failed to get Authorization")
+			logger.Logger.Errorf("token handler failed to get Authorization")
 			c.JSON(http.StatusOK, gin.H{
 				"ErrorCode": constant.ErrGetToken.ErrCode,
 				"ErrorMsg":  constant.ErrGetToken.ErrMsg,
@@ -83,7 +83,7 @@ func TokenHandler() gin.HandlerFunc {
 		}
 		claim, err := utils.ParseToken(tokenStr)
 		if err != nil {
-			logger.Errorf("token handler failed to parse Authorization")
+			logger.Logger.Errorf("token handler failed to parse Authorization")
 			c.JSON(http.StatusOK, gin.H{
 				"ErrorCode": constant.ErrParseToken.ErrCode,
 				"ErrorMsg":  constant.ErrParseToken.ErrMsg,
@@ -92,7 +92,7 @@ func TokenHandler() gin.HandlerFunc {
 			return
 		}
 		if claim == "" {
-			logger.Infof("token handler parsed an unavailble token")
+			logger.Logger.Infof("token handler parsed an unavailble token")
 			c.JSON(http.StatusOK, gin.H{
 				"ErrorCode": constant.ErrUnavailableToken.ErrCode,
 				"ErrorMsg":  constant.ErrUnavailableToken.ErrMsg,
@@ -100,7 +100,7 @@ func TokenHandler() gin.HandlerFunc {
 			})
 			return
 		}
-		logger.Infof("token handler parsed an unavailble token")
+		logger.Logger.Infof("token handler parsed an unavailble token")
 		c.Set("uid", claim)
 		c.Next()
 	}

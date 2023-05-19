@@ -19,7 +19,7 @@ func (ps *grpcServer) PushMsgToPusher(ctx context.Context, req *pbChat.PushMsgTo
 	uid := req.MsgFormat.RecvID
 	endpoint, err := p.db.GetOnlineUserGatewayEndpoint(uid)
 	if err != nil {
-		logger.Errorf("failed to write to redis | GetOnlineUserGatewayIP() | uid %v | error %v", uid, err)
+		logger.Logger.Errorf("failed to write to redis | GetOnlineUserGatewayIP() | uid %v | error %v", uid, err)
 		return &pbChat.PushMsgToPusherResponse{UserOnline: false, GatewayEndpoint: "", ErrCode: constant.ErrRedis.ErrCode, ErrMsg: constant.ErrRedis.ErrMsg}, err
 	}
 	// 用户不在线, 当前的逻辑是直接返回不在线, 可以新增逻辑离线推送
@@ -30,7 +30,7 @@ func (ps *grpcServer) PushMsgToPusher(ctx context.Context, req *pbChat.PushMsgTo
 	// 调用 gateway grpc 接口发送消息
 	conn, err := grpc.Dial(endpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		logger.Errorf("Failed to connect to gateway-grpc-server | error %v", err)
+		logger.Logger.Errorf("Failed to connect to gateway-grpc-server | error %v", err)
 		return &pbChat.PushMsgToPusherResponse{UserOnline: true, GatewayEndpoint: endpoint, ErrCode: constant.ErrConnectionFailed.ErrCode, ErrMsg: constant.ErrConnectionFailed.ErrMsg}, err
 	}
 	gatewayRPClient := pbChat.NewGatewayClient(conn)

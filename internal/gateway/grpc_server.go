@@ -26,10 +26,10 @@ func (s *GServer) Run() {
 	address := "127.0.0.1:" + strconv.Itoa(s.port)
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
-		logger.Errorf("listen network failed, err = %s, address = %s", err.Error(), address)
+		logger.Logger.Errorf("listen network failed, err = %s, address = %s", err.Error(), address)
 		return
 	}
-	logger.Infof("listen network success, address = %s", address)
+	logger.Logger.Infof("listen network success, address = %s", address)
 
 	//grpc server
 	srv := grpc.NewServer()
@@ -39,14 +39,14 @@ func (s *GServer) Run() {
 
 	pbChat.RegisterGatewayServer(srv, s)
 	if err != nil {
-		logger.Errorf("register rpc get_token to etcd failed, err = %s", err.Error())
+		logger.Logger.Errorf("register rpc get_token to etcd failed, err = %s", err.Error())
 		return
 	}
 
 	err = srv.Serve(listener)
 	if err != nil {
-		logger.Infof("rpc get_token fail, err = %s", err.Error())
+		logger.Logger.Infof("rpc get_token fail, err = %s", err.Error())
 		return
 	}
-	logger.Infof("rpc get_token init success")
+	logger.Logger.Infof("rpc get_token init success")
 }

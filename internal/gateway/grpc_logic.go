@@ -10,7 +10,7 @@ import (
 // 将 Pusher 发来的消息发送到客户端
 func (s *GServer) PushMsgToGateway(ctx context.Context, req *pbChat.PushMsgToGatewayRequest) (*pbChat.PushMsgToGatewayResponse, error) {
 	msg := req.GetMsgFormat()
-	logger.Infof("PushMsg is arriving, recvID: %v", msg.GetRecvID())
+	logger.Logger.Infof("PushMsg is arriving, recvID: %v", msg.GetRecvID())
 	conn := wServer.getUserConn(msg.GetRecvID())
 	err := wServer.writeMsg(conn, constant.ActionWSPushMsgToClient, constant.OK.ErrCode, constant.OK.ErrMsg, []byte{})
 	if err != nil {

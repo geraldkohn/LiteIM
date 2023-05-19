@@ -22,10 +22,10 @@ type userRegisterResponse struct {
 }
 
 func UserRegister(c *gin.Context) {
-	logger.Infof("HTTP API UserRegister init ...")
+	logger.Logger.Infof("HTTP API UserRegister init ...")
 	params := paramsUserRegister{}
 	if err := c.BindJSON(&params); err != nil {
-		logger.Errorf("http api user_register bind json failed, [params %v], [error %v]", params, err)
+		logger.Logger.Errorf("http api user_register bind json failed, [params %v], [error %v]", params, err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"ErrorCode": http.StatusBadRequest,
 			"ErrorMsg":  err.Error(),
@@ -35,7 +35,7 @@ func UserRegister(c *gin.Context) {
 	}
 	user, err := database.Databases.GetUserByName(params.Name)
 	if err != nil {
-		logger.Errorf("http api user_register call mysql failed, [params %v], [error %v]", params, err)
+		logger.Logger.Errorf("http api user_register call mysql failed, [params %v], [error %v]", params, err)
 		c.JSON(http.StatusOK, gin.H{
 			"ErrorCode": constant.ErrMysql.ErrCode,
 			"ErrorMsg":  constant.ErrMysql.ErrMsg,
@@ -44,7 +44,7 @@ func UserRegister(c *gin.Context) {
 		return
 	}
 	if user.Name == params.Name { // 名字需要保持唯一
-		logger.Infof("http api user_register try to register an existed name, [params %v], [error %v]", params, err)
+		logger.Logger.Infof("http api user_register try to register an existed name, [params %v], [error %v]", params, err)
 		c.JSON(http.StatusOK, gin.H{
 			"ErrorCode": constant.ErrAccountExists.ErrCode,
 			"ErrorMsg":  constant.ErrAccountExists.ErrMsg,
@@ -61,7 +61,7 @@ func UserRegister(c *gin.Context) {
 	// 创建用户
 	err = database.Databases.CreateUser(user)
 	if err != nil {
-		logger.Errorf("http api user_register create user is failed, [params %v], [error %v]", params, err)
+		logger.Logger.Errorf("http api user_register create user is failed, [params %v], [error %v]", params, err)
 		c.JSON(http.StatusOK, gin.H{
 			"ErrorCode": constant.ErrAccountExists.ErrCode,
 			"ErrorMsg":  constant.ErrAccountExists.ErrMsg,

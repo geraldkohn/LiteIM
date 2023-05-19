@@ -20,10 +20,10 @@ type joinGroupResponse struct {
 }
 
 func JoinGroup(c *gin.Context) {
-	logger.Infof("http api join_group init ...")
+	logger.Logger.Infof("http api join_group init ...")
 	params := paramsJoinGroup{}
 	if err := c.BindJSON(&params); err != nil {
-		logger.Errorf("http api join_group bad reqeust")
+		logger.Logger.Errorf("http api join_group bad reqeust")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"ErrorCode": http.StatusBadRequest,
 			"ErrorMsg":  err.Error(),
@@ -34,7 +34,7 @@ func JoinGroup(c *gin.Context) {
 	userID := c.GetString("uid")
 	err := database.Databases.CreateGroupMember(&db.GroupMember{GroupID: params.GroupUID, UserID: userID, JoinTime: utils.GetCurrentTimestampBySecond()})
 	if err != nil {
-		logger.Errorf("http api join_group failed to create group member, [params %v], [error %v]", params, err)
+		logger.Logger.Errorf("http api join_group failed to create group member, [params %v], [error %v]", params, err)
 		c.JSON(http.StatusOK, gin.H{
 			"ErrorCode": constant.ErrMysql.ErrCode,
 			"ErrorMsg":  constant.ErrMysql.ErrMsg,
@@ -42,7 +42,7 @@ func JoinGroup(c *gin.Context) {
 		})
 		return
 	}
-	logger.Infof("http api join_group succeed, [params %v]", params)
+	logger.Logger.Infof("http api join_group succeed, [params %v]", params)
 	c.JSON(http.StatusOK, gin.H{
 		"ErrorCode": constant.OK.ErrCode,
 		"ErrorMsg":  constant.OK.ErrMsg,

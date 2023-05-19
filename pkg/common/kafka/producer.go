@@ -43,7 +43,7 @@ func NewKafkaProducer(kc KafkaProducerConfig) *Producer {
 
 // 同步发送消息
 func (p *Producer) SendMessage(m proto.Message, key string) (partition int32, offset int64, err error) {
-	logger.Infof("Send Message To Kafka, message %v, key %v", m, key)
+	logger.Logger.Infof("Send Message To Kafka, message %v, key %v", m, key)
 	kMsg := &sarama.ProducerMessage{}
 	bMsg, err := proto.Marshal(m)
 	if err != nil {

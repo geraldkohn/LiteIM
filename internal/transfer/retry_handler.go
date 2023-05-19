@@ -12,7 +12,7 @@ func (tf *Transfer) handleRetryPush(msg []byte, msgKey string) error {
 	msgFormat := &pbChat.MsgFormat{}
 	err := proto.Unmarshal(msg, msgFormat)
 	if err != nil {
-		logger.Errorf("failed to unmarshal msg to phChat.MsgFormat, error: %v, msg: %v", err, msg)
+		logger.Logger.Errorf("failed to unmarshal msg to phChat.MsgFormat, error: %v, msg: %v", err, msg)
 		return err
 	}
 	tf.sendSingleMsgToPush(msgFormat)

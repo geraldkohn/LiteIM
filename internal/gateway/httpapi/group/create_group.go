@@ -21,10 +21,10 @@ type createGroupResponse struct {
 }
 
 func CreateGroup(c *gin.Context) {
-	logger.Infof("http api create_group init ...")
+	logger.Logger.Infof("http api create_group init ...")
 	params := paramsCreateGroup{}
 	if err := c.BindJSON(&params); err != nil {
-		logger.Errorf("http api create_group bad request")
+		logger.Logger.Errorf("http api create_group bad request")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"ErrorCode": http.StatusBadRequest,
 			"ErrorMsg":  err.Error(),
@@ -35,7 +35,7 @@ func CreateGroup(c *gin.Context) {
 	groupID := utils.GenerateUID()
 	err := database.Databases.CreateGroup(&db.Group{GroupID: groupID, Name: params.GroupName, CreateTime: utils.GetCurrentTimestampBySecond()})
 	if err != nil {
-		logger.Errorf("http api create_group failed to create group, [params %v], [error %v]", params, err)
+		logger.Logger.Errorf("http api create_group failed to create group, [params %v], [error %v]", params, err)
 		c.JSON(http.StatusOK, gin.H{
 			"ErrorCode": constant.ErrMysql.ErrCode,
 			"ErrorMsg":  constant.ErrMysql.ErrMsg,
@@ -43,7 +43,7 @@ func CreateGroup(c *gin.Context) {
 		})
 		return
 	}
-	logger.Infof("http api create_group succeed, [params %v]", params)
+	logger.Logger.Infof("http api create_group succeed, [params %v]", params)
 	c.JSON(http.StatusOK, gin.H{
 		"ErrorCode": constant.OK.ErrCode,
 		"ErrorMsg":  constant.OK.ErrMsg,

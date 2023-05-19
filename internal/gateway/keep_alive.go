@@ -17,7 +17,7 @@ const (
 
 // 初始化定时任务调度器
 func (ws *WServer) keepAlive() {
-	logger.Infof("Start keeping alive!")
+	logger.Logger.Infof("Start keeping alive!")
 	ws.scheduler.Start() // 阻塞方法
 }
 
@@ -31,14 +31,14 @@ func (ws *WServer) addToScheduler(conn *UserConn) {
 		conn.WriteMessage(websocket.PingMessage, []byte(conn.uid)) // 忽略掉错误
 	}
 	job := cronjob.NewJober(conn.uid, dofunc, time.Duration(heartBeat*time.Second), 0)
-	logger.Infof("job of usrID %v is added to scheduler", conn.uid)
+	logger.Logger.Infof("job of usrID %v is added to scheduler", conn.uid)
 	ws.scheduler.Add(job) // 加入调度
 }
 
 func (ws *WServer) clearConn(conn *UserConn) {
 	// 只在连接为被关闭时执行, 防止被关闭两次
 	if atomic.LoadInt32(&conn.drop) == 0 {
-		logger.Infof("close and clear websocket connection, conn's userID: %v", conn.uid)
+		logger.Logger.Infof("close and clear websocket connection, conn's userID: %v", conn.uid)
 		atomic.StoreInt32(&conn.drop, 1) // 设置连接的状态为已关闭
 		ws.connMapLock.Lock()
 		delete(ws.connMap, conn.uid) // 删除连接池

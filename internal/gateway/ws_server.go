@@ -56,13 +56,13 @@ func (ws *WServer) onInit() {
 }
 
 func (ws *WServer) Run() {
-	logger.Infof("Websocket Server Running...")
+	logger.Logger.Infof("Websocket Server Running...")
 	go ws.keepAlive()
 	ws.serveWs()
 }
 
 func (ws *WServer) serveWs() {
-	logger.Infof("Start listening websocket request!")
+	logger.Logger.Infof("Start listening websocket request!")
 	http.HandleFunc("/", ws.wsHandler)
 	err := http.ListenAndServe(":"+strconv.Itoa(viper.GetInt("WebsocketPort")), nil)
 	if err != nil {
@@ -79,7 +79,7 @@ func (ws *WServer) wsHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		newConn := &UserConn{conn, query["userID"][0], 0, utils.GetCurrentTimestampBySecond()}
 		ws.setProfile(newConn)
-		logger.Infof("a new websocket connection is set, userID: %v", newConn.uid)
+		logger.Logger.Infof("a new websocket connection is set, userID: %v", newConn.uid)
 		go ws.readMsg(newConn)
 	}
 }
@@ -88,13 +88,13 @@ func (ws *WServer) wsHandler(w http.ResponseWriter, r *http.Request) {
 func (ws *WServer) online(userID string) {
 	endpoint := fmt.Sprintf("%s:%d", nodeIP, viper.GetInt("GRPCPort"))
 	_, err := database.Databases.SetOnlineUserGatewayEndpoint(userID, endpoint)
-	logger.Errorf("Failed to bind online user to gateway endpoint | error %v", err)
+	logger.Logger.Errorf("Failed to bind online user to gateway endpoint | error %v", err)
 }
 
 // 删除 用户--Gateway 映射
 func (ws *WServer) offline(userID string) {
 	_, err := database.Databases.DeleteOnlineUserGatewayEndpoint(userID)
-	logger.Errorf("Failed to Debind online user to gateway endpoint | error %v", err)
+	logger.Logger.Errorf("Failed to Debind online user to gateway endpoint | error %v", err)
 }
 
 // 读取 websocket 连接内容
@@ -107,7 +107,7 @@ func (ws *WServer) readMsg(conn *UserConn) {
 			} else if err.Error() == websocket.ErrReadLimit.Error() {
 				continue
 			}
-			logger.Errorf("websocket read an error: %v", err)
+			logger.Logger.Errorf("websocket read an error: %v", err)
 			break
 		}
 		if messageType == websocket.CloseMessage {
@@ -121,7 +121,7 @@ func (ws *WServer) readMsg(conn *UserConn) {
 		ws.parseMsg(conn, msg)
 	}
 	ws.clearConn(conn)
-	logger.Infof("websocket connection is closed and clear source, conn userID: %v", conn.uid)
+	logger.Logger.Infof("websocket connection is closed and clear source, conn userID: %v", conn.uid)
 }
 
 // 异步逻辑, 处理信息

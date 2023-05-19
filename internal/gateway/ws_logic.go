@@ -14,7 +14,7 @@ import (
 )
 
 func (ws *WServer) getUserMaxSeq(conn *UserConn, userID string, req *pbChat.GetUserMaxSeqRequest) {
-	logger.Infof("ask to get user max sequence, userID: %s", userID)
+	logger.Logger.Infof("ask to get user max sequence, userID: %s", userID)
 	seq, err := database.Databases.GetUserMaxSeq(userID)
 	if err != nil {
 		glog.Errorf("failed to get user max sequence, error: %v", err)
@@ -27,11 +27,11 @@ func (ws *WServer) getUserMaxSeq(conn *UserConn, userID string, req *pbChat.GetU
 }
 
 func (ws *WServer) pullMsgBySeqRange(conn *UserConn, userID string, req *pbChat.PullMsgBySeqRangeRequest) {
-	logger.Infof("ask to pull msg by seq range, userID: %v, range: %v-%v", userID, req.SeqBegin, req.SeqEnd)
+	logger.Logger.Infof("ask to pull msg by seq range, userID: %v, range: %v-%v", userID, req.SeqBegin, req.SeqEnd)
 	result, err := database.Databases.GetMsgBySeqRange(userID, req.SeqBegin, req.SeqEnd)
 	if err != nil {
 		ws.writeMsg(conn, constant.ActionWSPullMsgBySeqRange, constant.ErrMongo.ErrCode, constant.ErrMongo.ErrMsg, []byte{})
-		logger.Errorf("failed to get message by seq range from monogoDB, error: %v", err)
+		logger.Logger.Errorf("failed to get message by seq range from monogoDB, error: %v", err)
 		return
 	}
 	list := &pbChat.MsgFormatList{}
@@ -41,11 +41,11 @@ func (ws *WServer) pullMsgBySeqRange(conn *UserConn, userID string, req *pbChat.
 }
 
 func (ws *WServer) pullMsgBySeqList(conn *UserConn, userID string, req *pbChat.PullMsgBySeqListRequest) {
-	logger.Infof("ask to pull msg by seq list, userID: %v, reqList: %v", userID, req.SeqList)
+	logger.Logger.Infof("ask to pull msg by seq list, userID: %v, reqList: %v", userID, req.SeqList)
 	result, err := database.Databases.GetMsgBySeqList(userID, req.SeqList)
 	if err != nil {
 		ws.writeMsg(conn, constant.ActionWSPullMsgBySeqList, constant.ErrMongo.ErrCode, constant.ErrMongo.ErrMsg, []byte{})
-		logger.Errorf("failed to get message by seq range from monogoDB, error: %v", err)
+		logger.Logger.Errorf("failed to get message by seq range from monogoDB, error: %v", err)
 		return
 	}
 	list := &pbChat.MsgFormatList{}
@@ -56,7 +56,7 @@ func (ws *WServer) pullMsgBySeqList(conn *UserConn, userID string, req *pbChat.P
 
 // 客户端向服务端推送消息
 func (ws *WServer) pushMsg(conn *UserConn, userID string, req *pbChat.PushMsgRequest) {
-	logger.Infof("user pull message to gateway server, userID: %v", userID)
+	logger.Logger.Infof("user pull message to gateway server, userID: %v", userID)
 	if req.MsgFormat.SendTime == 0 {
 		req.MsgFormat.SendTime = utils.GetCurrentTimestampByNano() // 设置消息发送时间
 	}
@@ -70,7 +70,7 @@ func (ws *WServer) pushMsg(conn *UserConn, userID string, req *pbChat.PushMsgReq
 		key := fmt.Sprintf("%s|%s", req.MsgFormat.SendID, req.MsgFormat.RecvID)
 		err := ws.sendMsgToKafka(req.MsgFormat, key)
 		if err != nil {
-			logger.Errorf("chatType: ChatSingle | failed to send msg to kafka | error: %v", err)
+			logger.Logger.Errorf("chatType: ChatSingle | failed to send msg to kafka | error: %v", err)
 			ws.writeMsg(conn, constant.ActionWSPushMsgToServer, constant.ErrKafka.ErrCode, constant.ErrKafka.ErrMsg, []byte{})
 			return
 		}
@@ -81,7 +81,7 @@ func (ws *WServer) pushMsg(conn *UserConn, userID string, req *pbChat.PushMsgReq
 		key := req.MsgFormat.GroupID
 		err := ws.sendMsgToKafka(req.MsgFormat, key)
 		if err != nil {
-			logger.Errorf("failed to send msg to kafka, key: %v, msg: %v, error: %v", key, req.MsgFormat, err)
+			logger.Logger.Errorf("failed to send msg to kafka, key: %v, msg: %v, error: %v", key, req.MsgFormat, err)
 			ws.writeMsg(conn, constant.ActionWSPushMsgToServer, constant.ErrKafka.ErrCode, constant.ErrKafka.ErrMsg, []byte{})
 			return
 		}
@@ -94,7 +94,7 @@ func (ws *WServer) pushMsg(conn *UserConn, userID string, req *pbChat.PushMsgReq
 func (ws *WServer) sendMsgToKafka(m proto.Message, key string) error {
 	partition, offset, err := ws.producer.SendMessage(m, key)
 	if err != nil {
-		logger.Infof("kafka send failed, key %v, send data %v, partition %v, offset %v, error %v", key, m, partition, offset, err)
+		logger.Logger.Infof("kafka send failed, key %v, send data %v, partition %v, offset %v, error %v", key, m, partition, offset, err)
 		return err
 	}
 	return nil

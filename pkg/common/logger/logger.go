@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var logger *zap.SugaredLogger
+var Logger *zap.SugaredLogger
 
 func initLogger() {
 	lumberJackLogger := &lumberjack.Logger{
@@ -26,29 +26,9 @@ func initLogger() {
 	//
 	core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
 	zlog := zap.New(core, zap.AddCaller()) // 将函数信息记录到日志中
-	logger = zlog.Sugar()
+	Logger = zlog.Sugar()
 }
 
 func init() {
 	initLogger()
-}
-
-func Infof(template string, args ...interface{}) {
-	logger.Infof(template, args...)
-}
-
-func Errorf(template string, args ...interface{}) {
-	logger.Errorf(template, args...)
-}
-
-func Fatalf(template string, args ...interface{}) {
-	logger.Fatalf(template, args...)
-}
-
-func Panicf(template string, args ...interface{}) {
-	logger.Panicf(template, args...)
-}
-
-func Warnf(template string, args ...interface{}) {
-	logger.Warnf(template, args...)
 }

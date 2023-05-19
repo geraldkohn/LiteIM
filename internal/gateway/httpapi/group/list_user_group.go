@@ -18,11 +18,11 @@ type listUserGroupResponse struct {
 }
 
 func ListUserGroup(c *gin.Context) {
-	logger.Infof("http api list_user_group init ...")
+	logger.Logger.Infof("http api list_user_group init ...")
 	userID := c.GetString("uid")
 	groupmember, err := database.Databases.GetGroupByUserID(userID)
 	if err != nil {
-		logger.Errorf("http api list_user_group failed to create group member, [params %v], [error %v]", userID, err)
+		logger.Logger.Errorf("http api list_user_group failed to create group member, [params %v], [error %v]", userID, err)
 		c.JSON(http.StatusOK, gin.H{
 			"ErrorCode": constant.ErrMysql.ErrCode,
 			"ErrorMsg":  constant.ErrMysql.ErrMsg,
@@ -34,7 +34,7 @@ func ListUserGroup(c *gin.Context) {
 	for _, gm := range groupmember {
 		groupIDList = append(groupIDList, gm.GroupID)
 	}
-	logger.Infof("http api list_user_group succeed, [params %v]", userID)
+	logger.Logger.Infof("http api list_user_group succeed, [params %v]", userID)
 	c.JSON(http.StatusOK, gin.H{
 		"ErrorCode": constant.OK.ErrCode,
 		"ErrorMsg":  constant.OK.ErrMsg,

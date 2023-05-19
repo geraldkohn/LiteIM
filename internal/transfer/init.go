@@ -94,7 +94,7 @@ func (consumerHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil
 func (consumerHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
 func (h *consumerHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
-		logger.Infof("MonogoConsumerHandler get a message %v", msg)
+		logger.Logger.Infof("MonogoConsumerHandler get a message %v", msg)
 		fn := h.topicHandle[msg.Topic]
 		err := fn(msg.Value, string(msg.Key))
 		if err == nil {

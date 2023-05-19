@@ -30,7 +30,7 @@ func initConfig() {
 func initNodeIP() {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		logger.Errorf("Failed to node ip")
+		logger.Logger.Errorf("Failed to node ip")
 		return
 	}
 
@@ -45,7 +45,7 @@ func initNodeIP() {
 		}
 	}
 
-	logger.Infof("init node ip:%s", nodeIP)
+	logger.Logger.Infof("init node ip:%s", nodeIP)
 }
 
 func initDataBases() {
