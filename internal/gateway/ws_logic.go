@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"fmt"
+	"strings"
 
 	pbChat "LiteIM/internal/api/rpc/chat"
 	database "LiteIM/internal/gateway/database"
@@ -67,7 +68,12 @@ func (ws *WServer) pushMsg(conn *UserConn, userID string, req *pbChat.PushMsgReq
 	switch req.MsgFormat.ChatType {
 	case constant.ChatSingle:
 		// 单聊的时候 key 设置为 sendID|recvID (sendID<recvID) 这样可以保证用户A与用户B单聊的信息被放入同一个分区, 这样就可以被一个协程处理, 而不是多个协程.
-		key := fmt.Sprintf("%s|%s", req.MsgFormat.SendID, req.MsgFormat.RecvID)
+		var key string
+		if strings.Compare(req.MsgFormat.SendID, req.MsgFormat.RecvID) <= 0 {
+			key = fmt.Sprintf("%s|%s", req.MsgFormat.SendID, req.MsgFormat.RecvID)
+		} else {
+			key = fmt.Sprintf("%s|%s", req.MsgFormat.RecvID, req.MsgFormat.SendID)
+		}
 		err := ws.sendMsgToKafka(req.MsgFormat, key)
 		if err != nil {
 			logger.Logger.Errorf("chatType: ChatSingle | failed to send msg to kafka | error: %v", err)
@@ -103,14 +109,14 @@ func (ws *WServer) sendMsgToKafka(m proto.Message, key string) error {
 func verifyToken(token string) (string, bool) {
 	userID, err := utils.ParseToken(token)
 	if err != nil {
-		glog.Errorf("parse token error: %v", err)
+		logger.Logger.Errorf("parse token error: %v", err)
 		return "", false
 	}
 	if userID == "" {
-		glog.Infof("unavailable token: %v", token)
+		logger.Logger.Infof("unavailable token: %v", token)
 		return "", false
 	}
-	glog.Infof("available token: %v", token)
+	logger.Logger.Infof("available token: %v", token)
 	return userID, true
 }
 

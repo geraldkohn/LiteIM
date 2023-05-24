@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	pbChat "LiteIM/internal/api/rpc/chat"
 	database "LiteIM/internal/gateway/database"
@@ -18,7 +17,6 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/gorilla/websocket"
-	"github.com/spf13/viper"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -30,29 +28,13 @@ type UserConn struct {
 }
 
 type WServer struct {
+	port        int                  // websocket port
 	wsUpgrader  *websocket.Upgrader  // websocket upgrader
 	connMapLock *sync.RWMutex        // 保护 connMap
 	connMap     map[string]*UserConn // 用户 ID -> 连接
 	producer    *kafka.Producer      // Kafka Producer
 	scheduler   cronjob.Scheduler    // 定时任务调度器
 	exit        chan error           // 退出
-}
-
-func (ws *WServer) onInit() {
-	ws.wsUpgrader = &websocket.Upgrader{
-		HandshakeTimeout: time.Duration(viper.GetInt("WebsocketTimeout")) * time.Second,
-		CheckOrigin:      func(r *http.Request) bool { return true },
-	}
-	ws.connMap = make(map[string]*UserConn)
-	ws.connMapLock = new(sync.RWMutex)
-	ws.producer = kafka.NewKafkaProducer(kafka.KafkaProducerConfig{
-		BrokerAddr:   viper.GetStringSlice("KafkaBrokerAddr"),
-		SASLUsername: viper.GetString("KafkaSASLUsername"),
-		SASLPassword: viper.GetString("KafkaSASLPassword"),
-		Topic:        viper.GetString("KafkaMsgTopic"),
-	})
-	ws.scheduler = cronjob.NewScheduler()
-	ws.exit = make(chan error)
 }
 
 func (ws *WServer) Run() {
@@ -64,7 +46,7 @@ func (ws *WServer) Run() {
 func (ws *WServer) serveWs() {
 	logger.Logger.Infof("Start listening websocket request!")
 	http.HandleFunc("/", ws.wsHandler)
-	err := http.ListenAndServe(":"+strconv.Itoa(viper.GetInt("WebsocketPort")), nil)
+	err := http.ListenAndServe(":"+strconv.Itoa(ws.port), nil)
 	if err != nil {
 		panic("Websocket Server Listening error:" + err.Error())
 	}
@@ -86,7 +68,7 @@ func (ws *WServer) wsHandler(w http.ResponseWriter, r *http.Request) {
 
 // 新增 用户--Gateway 映射
 func (ws *WServer) online(userID string) {
-	endpoint := fmt.Sprintf("%s:%d", nodeIP, viper.GetInt("GRPCPort"))
+	endpoint := fmt.Sprintf("%s:%d", nodeIP, ws.port)
 	_, err := database.Databases.SetOnlineUserGatewayEndpoint(userID, endpoint)
 	logger.Logger.Errorf("Failed to bind online user to gateway endpoint | error %v", err)
 }

@@ -35,7 +35,7 @@ type RedisConfig struct {
 }
 
 type MongodbConfig struct {
-	Addr     []string
+	Addr     string
 	Username string
 	Password string
 }
@@ -77,7 +77,7 @@ func (d *DataBases) initMongoDB(mdc MongodbConfig) {
 	cred.Password = mdc.Password
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	dsn := fmt.Sprintf("mongodb://%s", mdc.Addr[0])
+	dsn := fmt.Sprintf("mongodb://%s", mdc.Addr)
 	d.mongo, err = mongo.Connect(ctx, options.Client().ApplyURI(dsn).SetAuth(cred))
 	if err != nil {
 		panic("Failed to initialize to connect to mongodb" + err.Error())

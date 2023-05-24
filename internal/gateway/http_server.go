@@ -1,10 +1,7 @@
 package gateway
 
 import (
-	"net"
 	"net/http"
-	"strconv"
-	"time"
 
 	"LiteIM/internal/gateway/httpapi/auth"
 	"LiteIM/internal/gateway/httpapi/group"
@@ -13,31 +10,14 @@ import (
 	"LiteIM/pkg/utils"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
 )
 
 type HServer struct {
 	server *http.Server
 }
 
-func (hs *HServer) onInit() {
-	router := gin.Default()
-	initRouter(router)
-	hs.server = &http.Server{
-		Addr:         ":" + strconv.Itoa(viper.GetInt("HTTPPort")),
-		Handler:      router,
-		ReadTimeout:  time.Duration(viper.GetInt("HTTPReadTimeout")) * time.Second,
-		WriteTimeout: time.Duration(viper.GetInt("HTTPWriteTimeout")) * time.Second,
-	}
-}
-
 func (hs *HServer) Run() {
-	addr := ":" + strconv.Itoa(viper.GetInt("HTTPPort"))
-	l, err := net.Listen("tcp", addr)
-	if err != nil {
-		panic("HTTP Server Listen failed: " + addr)
-	}
-	err = hs.server.Serve(l)
+	err := hs.server.ListenAndServe()
 	if err != nil {
 		panic("HTTP Server: set up error: " + err.Error())
 	}

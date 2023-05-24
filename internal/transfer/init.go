@@ -6,16 +6,20 @@ import (
 	"os/signal"
 	"syscall"
 
+	"LiteIM/pkg/common/config"
 	"LiteIM/pkg/common/db"
 	"LiteIM/pkg/common/kafka"
 	"LiteIM/pkg/common/logger"
 	servicediscovery "LiteIM/pkg/common/service-discovery"
+	"LiteIM/pkg/utils"
 
 	"github.com/Shopify/sarama"
-	"github.com/spf13/viper"
 )
 
-var tfer *Transfer
+var (
+	tf   *Transfer
+	conf *config.Config
+)
 
 type Transfer struct {
 	consumerHandler   consumerHandler            // 消费者组+不同Topic处理函数
@@ -25,53 +29,59 @@ type Transfer struct {
 	retryDBProducer   *kafka.Producer            // 写入 DB 失败的消息重写入 kafka
 }
 
-func (tf *Transfer) initialize() {
+func initTransfer() {
+	tf = new(Transfer)
 	tf.pushDiscovery = servicediscovery.NewEtcdDiscovery(
-		viper.GetString(viper.GetString("PushServiceName")),
+		conf.Transfer.PusherServiceName,
 	)
 	tf.db = db.NewDataBases(
 		db.MysqlConfig{
-			Addr:     viper.GetString("MysqlAddr"),
-			Username: viper.GetString("MysqlUsername"),
-			Password: viper.GetString("MysqlPassword"),
+			Addr:     conf.Mysql.MysqlAddr,
+			Username: conf.Mysql.MysqlUsername,
+			Password: conf.Mysql.MysqlPassword,
 		},
 		db.RedisConfig{
-			Addr:     viper.GetString("RedisAddr"),
-			Username: viper.GetString("RedisUsername"),
-			Password: viper.GetString("RedisPassword"),
+			Addr:     conf.Redis.RedisAddr,
+			Username: conf.Redis.RedisUsername,
+			Password: conf.Redis.RedisPassword,
 		},
 		db.MongodbConfig{
-			Addr:     viper.GetStringSlice("MongoAddr"),
-			Username: viper.GetString("MongoUsername"),
-			Password: viper.GetString("MongoPassword"),
+			Addr:     conf.Mongo.MongoAddr,
+			Username: conf.Mongo.MongoUsername,
+			Password: conf.Mongo.MongoPassword,
 		},
 	)
 	tf.retryPushProducer = kafka.NewKafkaProducer(kafka.KafkaProducerConfig{
-		BrokerAddr:   viper.GetStringSlice("KafkaBrokerAddr"),
-		SASLUsername: viper.GetString("KafkaSASLUsername"),
-		SASLPassword: viper.GetString("KafkaSASLPassword"),
-		Topic:        viper.GetString("KafkaRetryPushTopic"),
+		BrokerAddr:   conf.Kafka.KafkaBrokerAddr,
+		SASLUsername: conf.Kafka.KafkaSASLUsername,
+		SASLPassword: conf.Kafka.KafkaSASLPassword,
+		Topic:        conf.Kafka.KafkaMsgTopic,
 	})
 	tf.retryDBProducer = kafka.NewKafkaProducer(kafka.KafkaProducerConfig{
-		BrokerAddr:   viper.GetStringSlice("KafkaBrokerAddr"),
-		SASLUsername: viper.GetString("KafkaSASLUsername"),
-		SASLPassword: viper.GetString("KafkaSASLPassword"),
-		Topic:        viper.GetString("KafkaRetryDBTopic"),
+		BrokerAddr:   conf.Kafka.KafkaBrokerAddr,
+		SASLUsername: conf.Kafka.KafkaSASLUsername,
+		SASLPassword: conf.Kafka.KafkaSASLPassword,
+		Topic:        conf.Kafka.KafkaMsgTopic,
 	})
 	tf.consumerHandler = consumerHandler{
-		kafka.NewConsumerGroup([]string{viper.GetString("KafkaMsgTopic"), viper.GetString("KafkaRetryPushTopic"), viper.GetString("KafkaRetryDBTopic")}, viper.GetString("KafkaConsumerGroup")),
+		kafka.NewConsumerGroup([]string{conf.Kafka.KafkaMsgTopic, conf.Kafka.KafkaRetryPushTopic}, utils.GenerateUID()),
 		make(map[string]handle),
 	}
-	tf.consumerHandler.topicHandle[viper.GetString("KafkaMsgTopic")] = tf.handleMsg
-	tf.consumerHandler.topicHandle[viper.GetString("KafkaRetryPushTopic")] = tf.handleRetryPush
+	tf.consumerHandler.topicHandle[conf.Kafka.KafkaMsgTopic] = tf.handleMsg
+	tf.consumerHandler.topicHandle[conf.Kafka.KafkaRetryPushTopic] = tf.handleRetryPush
+}
+
+func initConfig() {
+	conf = config.Init()
 }
 
 // 阻塞函数
 func Run() {
-	tfer.initialize()
+	initConfig()
+	initTransfer()
 	ctx, cancel := context.WithCancel(context.Background())
-	go tfer.pushDiscovery.Watch()                                                 // 监听服务发现
-	go tfer.consumerHandler.RegisterHandleAndConsumer(ctx, &tfer.consumerHandler) // 将消费者组注册
+	go tf.pushDiscovery.Watch()                                               // 监听服务发现
+	go tf.consumerHandler.RegisterHandleAndConsumer(ctx, &tf.consumerHandler) // 将消费者组注册
 
 	// 实现优雅关闭
 	quit := make(chan os.Signal, 1)
@@ -79,7 +89,7 @@ func Run() {
 	<-quit
 
 	cancel()
-	tfer.pushDiscovery.Exit()
+	tf.pushDiscovery.Exit()
 }
 
 type handle func(value []byte, key string) error // 处理函数, 处理接收到的消息

@@ -1,11 +1,6 @@
 package constant
 
 const (
-	// Service Name
-	GatewayServiceName  string = "gateway"
-	TransferServiceName string = "transfer"
-	PushServiceName     string = "push"
-
 	// Action Type
 	ActionWSGetUserMaxSeq     int32 = 1001
 	ActionWSPullMsgBySeqRange int32 = 1002
@@ -22,10 +17,4 @@ const (
 	// Chat Type
 	ChatSingle int32 = 11
 	ChatGroup  int32 = 12
-
-	KafkaChatTopic string = "chat"
-	// KafkaChatMonogoRetryTopic  string = "chat_monogo"
-	KafkaChatPushRetryTopic string = "chat_push"
-	// KafkaMonogoConsumerGroupID string = "monogo_consumer_group"
-	KafkaPushConsumerGroupID string = "push_consumer_group"
 )

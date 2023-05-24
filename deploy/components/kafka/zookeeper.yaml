@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper
+  namespace: geraldkohn
+
+spec:
+  selector:
+    matchLabels:
+      app: zk
+  serviceName: zookeeper-svc  # 声明属于哪个Headless Service
+  template:
+    metadata:
+      labels:
+        app: zk
+    spec:
+      containers:
+        - name: zk
+          image: zookeeper:latest
+          ports:
+            - containerPort: 2181
+              name: zkclient
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-svc   # 与serviceName 同名
+spec:
+  clusterIP: None
+  ports:
+    - port: 2181
+      targetPort: 2181
+      protocol: TCP
+      name: '2181'
+  selector:
+    app: zk

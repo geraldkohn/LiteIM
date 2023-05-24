@@ -15,13 +15,6 @@ type GServer struct {
 	port int
 }
 
-func NewGrpcPushServer(port int) *GServer {
-	s := &GServer{
-		port: port,
-	}
-	return s
-}
-
 func (s *GServer) Run() {
 	address := "127.0.0.1:" + strconv.Itoa(s.port)
 	listener, err := net.Listen("tcp", address)

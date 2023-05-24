@@ -7,16 +7,16 @@ import (
 	"os/signal"
 	"syscall"
 
+	"LiteIM/pkg/common/config"
 	"LiteIM/pkg/common/db"
 	"LiteIM/pkg/common/logger"
 	servicediscovery "LiteIM/pkg/common/service-discovery"
-
-	"github.com/spf13/viper"
 )
 
 var (
 	podIP string
 	p     *Pusher
+	conf  *config.Config
 )
 
 func initNodeIP() {
@@ -41,12 +41,7 @@ func initNodeIP() {
 }
 
 func initConfig() {
-	viper.SetConfigType("json")
-	f, err := os.Open("conf/conf.json")
-	if err != nil {
-		panic("无法打开文件" + err.Error())
-	}
-	viper.ReadConfig(f)
+	conf = config.Init()
 }
 
 type Pusher struct {
@@ -56,30 +51,30 @@ type Pusher struct {
 	db               *db.DataBases
 }
 
-func (p *Pusher) initialize() {
-	p.grpcServer = newGrpcServer(viper.GetInt("GRPCPort"))
+func initPusher() {
+	p.grpcServer = newGrpcServer(conf.Pusher.GrpcPort)
 	p.pushRegister = servicediscovery.NewEtcdRegister(
-		viper.GetString("PushServiceName"),
-		fmt.Sprintf("%s:%d", podIP, viper.GetInt("GRPCPort")),
+		conf.Pusher.PusherServiceName,
+		fmt.Sprintf("%s:%d", podIP, conf.Pusher.GrpcPort),
 	)
 	p.gatewayDiscovery = servicediscovery.NewEtcdDiscovery(
-		viper.GetString("GatewayServiceName"),
+		conf.Pusher.GatewayServiceName,
 	)
 	p.db = db.NewDataBases(
 		db.MysqlConfig{
-			Addr:     viper.GetString("MysqlAddr"),
-			Username: viper.GetString("MysqlUsername"),
-			Password: viper.GetString("MysqlPassword"),
+			Addr:     conf.Mysql.MysqlAddr,
+			Username: conf.Mysql.MysqlUsername,
+			Password: conf.Mysql.MysqlPassword,
 		},
 		db.RedisConfig{
-			Addr:     viper.GetString("RedisAddr"),
-			Username: viper.GetString("RedisUsername"),
-			Password: viper.GetString("RedisPassword"),
+			Addr:     conf.Redis.RedisAddr,
+			Username: conf.Redis.RedisUsername,
+			Password: conf.Redis.RedisPassword,
 		},
 		db.MongodbConfig{
-			Addr:     viper.GetStringSlice("MongoAddr"),
-			Username: viper.GetString("MongoUsername"),
-			Password: viper.GetString("MongoPassword"),
+			Addr:     conf.Mongo.MongoAddr,
+			Username: conf.Mongo.MongoUsername,
+			Password: conf.Mongo.MongoPassword,
 		},
 	)
 }
@@ -87,7 +82,8 @@ func (p *Pusher) initialize() {
 func Run() {
 	initConfig()
 	initNodeIP()
-	p.initialize()
+	initPusher()
+
 	go p.pushRegister.Run()
 	go p.gatewayDiscovery.Watch()
 	go p.grpcServer.Run()

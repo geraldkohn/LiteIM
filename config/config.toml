@@ -1,0 +1,37 @@
+[gateway]
+grpcPort = 8020
+httpPort = 8021
+httPReadTimeout = 10
+httPWriteTimeout = 10
+websocketPort = 8022
+websocketTimeout = 10
+
+[pusher]
+grpcPort = 8010
+pusherServiceName = "push-service"     # 服务发现
+gatewayServiceName = "gateway-service" # 服务发现
+
+[transfer]
+pusherServiceName = "push-service"     # 服务发现
+
+[kafka]
+kafkaBrokerAddr = ["kafka-0.kafka-svc:9092"]
+kafkaSASLUsername = "kafkacli"
+kafkaSASLPassword = "kafkacliwps"
+kafkaMsgTopic = "chat"
+kafkaRetryPushTopic = "retry-push"
+
+[mysql]
+mysqlAddr = "mysql-0.mysql-svc:3306"
+mysqlUsername = "root"
+mysqlPassword = "root"
+
+[redis]
+redisAddr = "redis-0.redis-svc:6379"
+redisUsername = "root"
+redisPassword = "root"
+
+[mongo]
+mongoAddr = "mongo-0.mongo-svc:27017"
+mongoUsername = "root"
+mongoPassword = "root"

@@ -4,18 +4,17 @@ ENV GO111MODULE=on
 ENV GOPROXY=https://goproxy.cn,direct
 
 WORKDIR /im
-COPY ../. .
+COPY . .
 
-WORKDIR /im/script
-RUN chomd +x *.sh
+RUN chmod +x script/*.sh
 
-RUN /bin/sh -c ./build_gateway.sh
+RUN /bin/sh -c script/build_gateway.sh
 
 FROM ubuntu:20.04
 
 COPY --from=build /im/script /im/script
 COPY --from=build /im/bin /im/bin
 
-WORKDIR /im/script
+WORKDIR /im
 
-CMD ["./start_gateway.sh"]
+CMD ["script/start_gateway.sh"]

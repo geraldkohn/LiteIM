@@ -2,13 +2,20 @@ package gateway
 
 import (
 	"net"
-	"os"
+	"net/http"
+	"strconv"
+	"sync"
+	"time"
 
 	database "LiteIM/internal/gateway/database"
+	"LiteIM/pkg/common/config"
+	"LiteIM/pkg/common/cronjob"
 	"LiteIM/pkg/common/db"
+	"LiteIM/pkg/common/kafka"
 	"LiteIM/pkg/common/logger"
 
-	"github.com/spf13/viper"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 var (
@@ -16,15 +23,11 @@ var (
 	wServer    *WServer
 	pushServer *GServer
 	nodeIP     string
+	conf       *config.Config
 )
 
 func initConfig() {
-	viper.SetConfigType("json")
-	f, err := os.Open("conf/conf.json")
-	if err != nil {
-		panic("无法打开配置文件 | " + err.Error())
-	}
-	viper.ReadConfig(f)
+	conf = config.Init()
 }
 
 func initNodeIP() {
@@ -51,46 +54,71 @@ func initNodeIP() {
 func initDataBases() {
 	database.Databases = db.NewDataBases(
 		db.MysqlConfig{
-			Addr:     viper.GetString("MysqlAddr"),
-			Username: viper.GetString("MysqlUsername"),
-			Password: viper.GetString("MysqlPassword"),
+			Addr:     conf.Mysql.MysqlAddr,
+			Username: conf.Mysql.MysqlUsername,
+			Password: conf.Mysql.MysqlPassword,
 		},
 		db.RedisConfig{
-			Addr:     viper.GetString("RedisAddr"),
-			Username: viper.GetString("RedisUsername"),
-			Password: viper.GetString("RedisPassword"),
+			Addr:     conf.Redis.RedisAddr,
+			Username: conf.Redis.RedisUsername,
+			Password: conf.Redis.RedisPassword,
 		},
 		db.MongodbConfig{
-			Addr:     viper.GetStringSlice("MongoAddr"),
-			Username: viper.GetString("MongoUsername"),
-			Password: viper.GetString("MongoPassword"),
+			Addr:     conf.Mongo.MongoAddr,
+			Username: conf.Mongo.MongoUsername,
+			Password: conf.Mongo.MongoPassword,
 		},
 	)
 }
 
 // 阻塞方法
 func initHttpServer() {
-	hServer.onInit()
-	hServer.Run()
+	router := gin.Default()
+	initRouter(router)
+	hServer = new(HServer)
+	hServer.server = &http.Server{
+		Addr:         ":" + strconv.Itoa(conf.Gateway.HttpPort),
+		Handler:      router,
+		ReadTimeout:  time.Duration(conf.Gateway.HttPReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(conf.Gateway.HttPWriteTimeout) * time.Second,
+	}
 }
 
 // 阻塞方法
 func initWebsocketServer() {
-	wServer.onInit()
-	wServer.Run()
+	wServer = new(WServer)
+	wServer.port = conf.Gateway.WebsocketPort
+	wServer.wsUpgrader = &websocket.Upgrader{
+		HandshakeTimeout: time.Duration(conf.Gateway.WebsocketTimeout) * time.Second,
+		CheckOrigin:      func(r *http.Request) bool { return true },
+	}
+	wServer.connMap = make(map[string]*UserConn)
+	wServer.connMapLock = new(sync.RWMutex)
+	wServer.producer = kafka.NewKafkaProducer(kafka.KafkaProducerConfig{
+		BrokerAddr:   conf.Kafka.KafkaBrokerAddr,
+		SASLUsername: conf.Kafka.KafkaSASLUsername,
+		SASLPassword: conf.Kafka.KafkaSASLPassword,
+		Topic:        conf.Kafka.KafkaMsgTopic,
+	})
+	wServer.scheduler = cronjob.NewScheduler()
+	wServer.exit = make(chan error)
 }
 
 // 阻塞方法
 func initGrpcServer() {
-	pushServer = NewGrpcPushServer(viper.GetInt("GRPCPort"))
-	pushServer.Run()
+	pushServer = new(GServer)
+	pushServer.port = conf.Gateway.GrpcPort
 }
 
 func Run() {
 	initConfig()
 	initNodeIP()
 	initDataBases()
-	go initHttpServer()
-	go initWebsocketServer()
-	go initGrpcServer()
+	initHttpServer()
+	initWebsocketServer()
+	initGrpcServer()
+
+	go hServer.Run()
+	go wServer.Run()
+	go pushServer.Run()
 }
