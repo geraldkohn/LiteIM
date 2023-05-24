@@ -1,5 +1,11 @@
 # LiteIM
 
+<p align="center">
+  <img src="docs/logo.png" width="150">
+  <br />
+  <br />
+</p>
+
 ## 简介
 
 LiteIM 是一个即时通讯服务器. 传输协议为 Websocket. 扩展性较好, 无需修改服务端代码即可扩展自定义消息. 通过 LiteIM, 可以快速将即时通讯和网络能力集成到自己的应用中. 
