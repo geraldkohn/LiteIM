@@ -11,14 +11,14 @@ push-images: # 默认版本为latest
 	docker push geraldkohn/im-pusher
 	docker push geraldkohn/im-transfer
 
-deploy-components:
-	kubectl apply -f deploy/components/etcd
-	kubectl apply -f deploy/components/kafka
-	kubectl apply -f deploy/components/mongodb
-	kubectl apply -f deploy/components/mysql
-	kubectl apply -f deploy/components/redis
+deploy-k8s-components:
+	kubectl apply -f deploy_k8s/components/etcd
+	kubectl apply -f deploy_k8s/components/kafka
+	kubectl apply -f deploy_k8s/components/mongodb
+	kubectl apply -f deploy_k8s/components/mysql
+	kubectl apply -f deploy_k8s/components/redis
 
-deploy-source:
-	kubectl apply -f deploy/gateway
-	kubectl apply -f deploy/pusher
-	kubectl apply -f deploy/transfer
+deploy-k8s-all:
+	kubectl apply -f deploy_k8s/gateway
+	kubectl apply -f deploy_k8s/pusher
+	kubectl apply -f deploy_k8s/transfer

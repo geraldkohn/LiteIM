@@ -1,4 +1,4 @@
-# IM
+# LiteIM
 
 ## 简介
 
@@ -6,7 +6,9 @@ LiteIM 是一个即时通讯服务器. 传输协议为 Websocket. 扩展性较�
 
 ## 安装 IM
 
-> LiteIM 依赖五个开源高性能组件: ETCD, MySQL, MongoDB, Redis 和 Kafka. 私有化部署 IM 前, 请确保五个组件已经安装.
+LiteIM 依赖五个开源高性能组件: ETCD, MySQL, MongoDB, Redis 和 Kafka. 私有化部署 IM 前, 请确保五个组件已经安装.
+
+可使用 `make deploy-k8s-components` 命令部署这五个组件(仅供测试)
 
 ### Docker 部署
 
@@ -14,7 +16,7 @@ TODO
 
 ### kubernetes 部署
 
-TODO
+`make deploy-k8s-all` 一键部署
 
 ## 说明
 
@@ -25,14 +27,6 @@ TODO
 * MongoDB: 用户消息的离线存储.
 * Redis: 存放用户消息序列号, 用户会话信息.
 * Kafka: 作为消息传输存储队列.
-
-### 内部服务说明
-
-TODO
-
-### 脚本说明
-
-TODO
 
 ## 时序图
 
