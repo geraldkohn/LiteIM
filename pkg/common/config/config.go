@@ -63,7 +63,7 @@ type Mongo struct {
 
 func Init() *Config {
 	viper.SetConfigType("toml")
-	f, err := os.Open("../../../config/config.toml")
+	f, err := os.Open("config/config.toml")
 	if err != nil {
 		panic("无法打开配置文件 | " + err.Error())
 	}

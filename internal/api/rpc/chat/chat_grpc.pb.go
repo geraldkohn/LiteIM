@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v4.22.0
-// source: internal/api/chat/chat.proto
+// source: chat/chat.proto
 
 package pbChat
 
@@ -101,7 +101,7 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "internal/api/chat/chat.proto",
+	Metadata: "chat/chat.proto",
 }
 
 // PusherClient is the client API for Pusher service.
@@ -187,5 +187,5 @@ var Pusher_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "internal/api/chat/chat.proto",
+	Metadata: "chat/chat.proto",
 }

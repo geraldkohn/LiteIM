@@ -53,7 +53,7 @@ func (d *DataBases) initMySQL(mc MysqlConfig) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=ture&loc=Local", mc.Username, mc.Password, mc.Addr, "mysql")
 	d.mysql, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("Failed to initialize mysql connection" + err.Error())
+		panic("Failed to initialize mysql connection | " + err.Error())
 	}
 }
 
@@ -66,7 +66,7 @@ func (d *DataBases) initRedis(rc RedisConfig) {
 
 	_, err := d.redis.Ping(context.Background()).Result()
 	if err != nil {
-		panic("Failed to initialize connection with redis" + err.Error())
+		panic("Failed to initialize connection with redis | " + err.Error())
 	}
 }
 
@@ -80,6 +80,6 @@ func (d *DataBases) initMongoDB(mdc MongodbConfig) {
 	dsn := fmt.Sprintf("mongodb://%s", mdc.Addr)
 	d.mongo, err = mongo.Connect(ctx, options.Client().ApplyURI(dsn).SetAuth(cred))
 	if err != nil {
-		panic("Failed to initialize to connect to mongodb" + err.Error())
+		panic("Failed to initialize to connect to mongodb | " + err.Error())
 	}
 }

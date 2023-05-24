@@ -4,18 +4,17 @@ ENV GO111MODULE=on
 ENV GOPROXY=https://goproxy.cn,direct
 
 WORKDIR /im
-COPY ../. .
+COPY . .
 
-WORKDIR /im/script
-RUN chomd +x *.sh
+RUN chmod +x script/*.sh
 
-RUN /bin/sh -c ./build_transfer.sh
+RUN /bin/sh -c script/build_transfer.sh
 
 FROM ubuntu:20.04
 
 COPY --from=build /im/script /im/script
 COPY --from=build /im/bin /im/bin
 
-WORKDIR /im/script
+WORKDIR /im
 
-CMD ["./start_transfer.sh"]
+CMD ["script/start_transfer.sh"]
