@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"LiteIM/pkg/common/setting"
-
 	"gotest.tools/v3/assert"
 )
 
 func TestToken(t *testing.T) {
-	setting.APPSetting.Auth.JwtSecret = "secret"
 	testCase := []struct {
 		userID string
 	}{

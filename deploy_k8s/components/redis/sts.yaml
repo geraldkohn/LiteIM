@@ -18,21 +18,25 @@ spec:
       containers:
       - name: redis
         image: redis:5-alpine
+        lifecycle:
+          postStart:
+            exec:
+              command: [ "/bin/sh", "-c", "redis-cli config set requirepass root" ]
         ports:
         - containerPort: 6379
           name: client
-        volumeMounts:
-        - name: redis-local-1g-pvc
-          mountPath: /data
+  #       volumeMounts:
+  #       - name: redis-local-1g-pvc
+  #         mountPath: /data
 
-  volumeClaimTemplates:
-  - metadata:
-      name: redis-local-1g-pvc
-      namespace: geraldkohn
-    spec:
-      storageClassName: redis-storage-class
-      accessModes: 
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 1Gi
+  # volumeClaimTemplates:
+  # - metadata:
+  #     name: redis-local-1g-pvc
+  #     namespace: geraldkohn
+  #   spec:
+  #     storageClassName: redis-storage-class
+  #     accessModes: 
+  #     - ReadWriteOnce
+  #     resources:
+  #       requests:
+  #         storage: 1Gi

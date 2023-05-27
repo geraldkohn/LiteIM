@@ -24,18 +24,18 @@ spec:
         ports:
         - containerPort: 3306
           name: mysql
-        volumeMounts:
-        - name: mysql-local-1g-pvc
-          mountPath: /var/lib/mysql
+  #       volumeMounts:
+  #       - name: mysql-local-1g-pvc
+  #         mountPath: /var/lib/mysql
 
-  volumeClaimTemplates:
-  - metadata:
-      name: mysql-local-1g-pvc
-      namespace: geraldkohn
-    spec:
-      storageClassName: mysql-storage-class
-      accessModes: 
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 1Gi
+  # volumeClaimTemplates:
+  # - metadata:
+  #     name: mysql-local-1g-pvc
+  #     namespace: geraldkohn
+  #   spec:
+  #     storageClassName: mysql-storage-class
+  #     accessModes: 
+  #     - ReadWriteOnce
+  #     resources:
+  #       requests:
+  #         storage: 1Gi

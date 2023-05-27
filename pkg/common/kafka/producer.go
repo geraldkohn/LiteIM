@@ -1,8 +1,8 @@
 package kafka
 
 import (
+	"LiteIM/pkg/common/config"
 	"LiteIM/pkg/common/logger"
-	"LiteIM/pkg/common/setting"
 
 	"github.com/Shopify/sarama"
 	"github.com/golang/glog"
@@ -27,7 +27,7 @@ func NewKafkaProducer(kc KafkaProducerConfig) *Producer {
 	producerConfig := sarama.NewConfig()
 	producerConfig.Producer.Return.Successes = true
 	producerConfig.Producer.Return.Errors = true
-	if setting.APPSetting.Kafka.SASLUserName != "" && setting.APPSetting.Kafka.SASLPassword != "" {
+	if config.Conf.Kafka.KafkaSASLUsername != "" && config.Conf.Kafka.KafkaSASLPassword != "" {
 		producerConfig.Net.SASL.Enable = true
 		producerConfig.Net.SASL.User = kc.SASLUsername
 		producerConfig.Net.SASL.Password = kc.SASLPassword

@@ -23,12 +23,7 @@ var (
 	wServer    *WServer
 	pushServer *GServer
 	nodeIP     string
-	conf       *config.Config
 )
-
-func initConfig() {
-	conf = config.Init()
-}
 
 func initNodeIP() {
 	addrs, err := net.InterfaceAddrs()
@@ -54,19 +49,18 @@ func initNodeIP() {
 func initDataBases() {
 	database.Databases = db.NewDataBases(
 		db.MysqlConfig{
-			Addr:     conf.Mysql.MysqlAddr,
-			Username: conf.Mysql.MysqlUsername,
-			Password: conf.Mysql.MysqlPassword,
+			Addr:     config.Conf.Mysql.MysqlAddr,
+			Username: config.Conf.Mysql.MysqlUsername,
+			Password: config.Conf.Mysql.MysqlPassword,
 		},
 		db.RedisConfig{
-			Addr:     conf.Redis.RedisAddr,
-			Username: conf.Redis.RedisUsername,
-			Password: conf.Redis.RedisPassword,
+			Addr:     config.Conf.Redis.RedisAddr,
+			Password: config.Conf.Redis.RedisPassword,
 		},
 		db.MongodbConfig{
-			Addr:     conf.Mongo.MongoAddr,
-			Username: conf.Mongo.MongoUsername,
-			Password: conf.Mongo.MongoPassword,
+			Addr:     config.Conf.Mongo.MongoAddr,
+			Username: config.Conf.Mongo.MongoUsername,
+			Password: config.Conf.Mongo.MongoPassword,
 		},
 	)
 }
@@ -77,28 +71,28 @@ func initHttpServer() {
 	initRouter(router)
 	hServer = new(HServer)
 	hServer.server = &http.Server{
-		Addr:         ":" + strconv.Itoa(conf.Gateway.HttpPort),
+		Addr:         ":" + strconv.Itoa(config.Conf.Gateway.HttpPort),
 		Handler:      router,
-		ReadTimeout:  time.Duration(conf.Gateway.HttPReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(conf.Gateway.HttPWriteTimeout) * time.Second,
+		ReadTimeout:  time.Duration(config.Conf.Gateway.HttPReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(config.Conf.Gateway.HttPWriteTimeout) * time.Second,
 	}
 }
 
 // 阻塞方法
 func initWebsocketServer() {
 	wServer = new(WServer)
-	wServer.port = conf.Gateway.WebsocketPort
+	wServer.port = config.Conf.Gateway.WebsocketPort
 	wServer.wsUpgrader = &websocket.Upgrader{
-		HandshakeTimeout: time.Duration(conf.Gateway.WebsocketTimeout) * time.Second,
+		HandshakeTimeout: time.Duration(config.Conf.Gateway.WebsocketTimeout) * time.Second,
 		CheckOrigin:      func(r *http.Request) bool { return true },
 	}
 	wServer.connMap = make(map[string]*UserConn)
 	wServer.connMapLock = new(sync.RWMutex)
 	wServer.producer = kafka.NewKafkaProducer(kafka.KafkaProducerConfig{
-		BrokerAddr:   conf.Kafka.KafkaBrokerAddr,
-		SASLUsername: conf.Kafka.KafkaSASLUsername,
-		SASLPassword: conf.Kafka.KafkaSASLPassword,
-		Topic:        conf.Kafka.KafkaMsgTopic,
+		BrokerAddr:   config.Conf.Kafka.KafkaBrokerAddr,
+		SASLUsername: config.Conf.Kafka.KafkaSASLUsername,
+		SASLPassword: config.Conf.Kafka.KafkaSASLPassword,
+		Topic:        config.Conf.Kafka.KafkaMsgTopic,
 	})
 	wServer.scheduler = cronjob.NewScheduler()
 	wServer.exit = make(chan error)
@@ -107,11 +101,10 @@ func initWebsocketServer() {
 // 阻塞方法
 func initGrpcServer() {
 	pushServer = new(GServer)
-	pushServer.port = conf.Gateway.GrpcPort
+	pushServer.port = config.Conf.Gateway.GrpcPort
 }
 
 func Run() {
-	initConfig()
 	initNodeIP()
 	initDataBases()
 	initHttpServer()

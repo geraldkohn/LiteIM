@@ -1,12 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"testing"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 func TestAutoFillConfig(t *testing.T) {
-	config := Init()
-	spew.Dump(config)
+	fmt.Printf("%v", Conf)
 }

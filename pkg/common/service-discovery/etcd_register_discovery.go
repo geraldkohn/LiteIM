@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"LiteIM/pkg/common/setting"
+	"LiteIM/pkg/common/config"
 
 	"github.com/golang/glog"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
@@ -30,9 +30,9 @@ type EtcdDiscovery struct {
 
 func NewEtcdDiscovery(serviceName string) Discovery {
 	cli, err := etcd.New(etcd.Config{
-		Endpoints: setting.APPSetting.Etcd.Addr,
-		Username:  setting.APPSetting.Etcd.Username,
-		Password:  setting.APPSetting.Etcd.Password,
+		Endpoints: config.Conf.Etcd.EtcdAddr,
+		Username:  config.Conf.Etcd.EtcdUsername,
+		Password:  config.Conf.Etcd.EtcdPassword,
 	})
 	if err != nil {
 		glog.Errorf("failed to create a etcd discovery, error: %s", err)
@@ -122,9 +122,9 @@ type EtcdRegister struct {
 
 func NewEtcdRegister(name string, endpoint string) Register {
 	cli, err := etcd.New(etcd.Config{
-		Endpoints: setting.APPSetting.Etcd.Addr,
-		Username:  setting.APPSetting.Etcd.Username,
-		Password:  setting.APPSetting.Etcd.Password,
+		Endpoints: config.Conf.Etcd.EtcdAddr,
+		Username:  config.Conf.Etcd.EtcdUsername,
+		Password:  config.Conf.Etcd.EtcdPassword,
 	})
 	if err != nil {
 		glog.Errorf("failed to create a etcd discovery, error: %s", err)

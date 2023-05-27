@@ -28,17 +28,10 @@ mysqlPassword = "root"
 
 [redis]
 redisAddr = "redis-0.redis-svc:6379"
+redisUsername = "root"
 redisPassword = "root"
 
 [mongo]
 mongoAddr = "mongo-0.mongo-svc:27017"
 mongoUsername = "root"
 mongoPassword = "root"
-
-[etcd]
-etcdAddr = ["etcd-0.etcd-svc:2379"]
-etcdUsername = "root"
-etcdPassword = "root"
-
-[secret]
-jwtSecret = "default-secret"

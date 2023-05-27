@@ -1,10 +1,25 @@
 package config
 
 import (
+	"LiteIM/pkg/common/logger"
 	"os"
 
 	"github.com/spf13/viper"
 )
+
+var Conf Config
+
+func init() {
+	viper.SetConfigType("toml")
+	f, err := os.Open("config/config.toml")
+	if err != nil {
+		panic("无法打开配置文件 | " + err.Error())
+	}
+	viper.ReadConfig(f)
+	Conf = Config{}
+	autoFillConfig(&Conf)
+	logger.Logger.Debug(Conf)
+}
 
 type Config struct {
 	Gateway  Gateway
@@ -14,6 +29,8 @@ type Config struct {
 	Mysql    Mysql
 	Redis    Redis
 	Mongo    Mongo
+	Etcd     Etcd
+	Secret   Secret
 }
 
 type Gateway struct {
@@ -51,7 +68,6 @@ type Mysql struct {
 
 type Redis struct {
 	RedisAddr     string
-	RedisUsername string
 	RedisPassword string
 }
 
@@ -61,17 +77,14 @@ type Mongo struct {
 	MongoPassword string
 }
 
-func Init() *Config {
-	viper.SetConfigType("toml")
-	f, err := os.Open("config/config.toml")
-	if err != nil {
-		panic("无法打开配置文件 | " + err.Error())
-	}
-	viper.ReadConfig(f)
+type Etcd struct {
+	EtcdAddr     []string
+	EtcdUsername string
+	EtcdPassword string
+}
 
-	var config = new(Config)
-	autoFillConfig(config)
-	return config
+type Secret struct {
+	JwtSecret string
 }
 
 func autoFillConfig(config *Config) {
@@ -105,12 +118,19 @@ func autoFillConfig(config *Config) {
 	}
 	config.Redis = Redis{
 		RedisAddr:     viper.GetString("redis.redisAddr"),
-		RedisUsername: viper.GetString("redis.redisUsername"),
 		RedisPassword: viper.GetString("redis.redisPassword"),
 	}
 	config.Mongo = Mongo{
 		MongoAddr:     viper.GetString("mongo.mongoAddr"),
 		MongoUsername: viper.GetString("mongo.mongoUsername"),
 		MongoPassword: viper.GetString("mongo.mongoPassword"),
+	}
+	config.Etcd = Etcd{
+		EtcdAddr:     viper.GetStringSlice("etcd.etcdAddr"),
+		EtcdUsername: viper.GetString("etcd.etcdUsername"),
+		EtcdPassword: viper.GetString("etcd.etcdPassword"),
+	}
+	config.Secret = Secret{
+		JwtSecret: viper.GetString("secret.jwtSecret"),
 	}
 }

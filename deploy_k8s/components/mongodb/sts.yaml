@@ -22,23 +22,23 @@ spec:
         ports:
         - containerPort: 27017
           name: mongo
-        volumeMounts:
-        - name: mongo-local-1g-pvc
-          mountPath: /data
+        # volumeMounts:
+        # - name: mongo-local-1g-pvc
+        #   mountPath: /data
         # env:
         #   - name: MONGO_INITDB_ROOT_USERNAME
         #     value: root
         #   - name: MONGO_INITDB_ROOT_PASSWORD
         #     value: root
 
-  volumeClaimTemplates:
-  - metadata:
-      name: mongo-local-1g-pvc
-      namespace: geraldkohn
-    spec:
-      storageClassName: mongo-storage-class
-      accessModes: 
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 1Gi
+  # volumeClaimTemplates:
+  # - metadata:
+  #     name: mongo-local-1g-pvc
+  #     namespace: geraldkohn
+  #   spec:
+  #     storageClassName: mongo-storage-class
+  #     accessModes: 
+  #     - ReadWriteOnce
+  #     resources:
+  #       requests:
+  #         storage: 1Gi

@@ -16,7 +16,6 @@ import (
 var (
 	podIP string
 	p     *Pusher
-	conf  *config.Config
 )
 
 func initNodeIP() {
@@ -40,10 +39,6 @@ func initNodeIP() {
 	logger.Logger.Infof("init node ip:%s", podIP)
 }
 
-func initConfig() {
-	conf = config.Init()
-}
-
 type Pusher struct {
 	grpcServer       *grpcServer
 	pushRegister     servicediscovery.Register
@@ -52,35 +47,33 @@ type Pusher struct {
 }
 
 func initPusher() {
-	p.grpcServer = newGrpcServer(conf.Pusher.GrpcPort)
+	p.grpcServer = newGrpcServer(config.Conf.Pusher.GrpcPort)
 	p.pushRegister = servicediscovery.NewEtcdRegister(
-		conf.Pusher.PusherServiceName,
-		fmt.Sprintf("%s:%d", podIP, conf.Pusher.GrpcPort),
+		config.Conf.Pusher.PusherServiceName,
+		fmt.Sprintf("%s:%d", podIP, config.Conf.Pusher.GrpcPort),
 	)
 	p.gatewayDiscovery = servicediscovery.NewEtcdDiscovery(
-		conf.Pusher.GatewayServiceName,
+		config.Conf.Pusher.GatewayServiceName,
 	)
 	p.db = db.NewDataBases(
 		db.MysqlConfig{
-			Addr:     conf.Mysql.MysqlAddr,
-			Username: conf.Mysql.MysqlUsername,
-			Password: conf.Mysql.MysqlPassword,
+			Addr:     config.Conf.Mysql.MysqlAddr,
+			Username: config.Conf.Mysql.MysqlUsername,
+			Password: config.Conf.Mysql.MysqlPassword,
 		},
 		db.RedisConfig{
-			Addr:     conf.Redis.RedisAddr,
-			Username: conf.Redis.RedisUsername,
-			Password: conf.Redis.RedisPassword,
+			Addr:     config.Conf.Redis.RedisAddr,
+			Password: config.Conf.Redis.RedisPassword,
 		},
 		db.MongodbConfig{
-			Addr:     conf.Mongo.MongoAddr,
-			Username: conf.Mongo.MongoUsername,
-			Password: conf.Mongo.MongoPassword,
+			Addr:     config.Conf.Mongo.MongoAddr,
+			Username: config.Conf.Mongo.MongoUsername,
+			Password: config.Conf.Mongo.MongoPassword,
 		},
 	)
 }
 
 func Run() {
-	initConfig()
 	initNodeIP()
 	initPusher()
 

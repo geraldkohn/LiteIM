@@ -14,6 +14,7 @@ FROM ubuntu:20.04
 
 COPY --from=build /im/script /im/script
 COPY --from=build /im/bin /im/bin
+COPY --from=build /im/config /im/config
 
 WORKDIR /im
 

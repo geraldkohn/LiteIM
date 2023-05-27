@@ -18,7 +18,20 @@ deploy-k8s-components:
 	kubectl apply -f deploy_k8s/components/mysql
 	kubectl apply -f deploy_k8s/components/redis
 
+clean-k8s-components:
+	kubectl delete sts --all -n geraldkohn
+	kubectl delete pvc --all -n geraldkohn
+	kubectl delete pv  --all -n geraldkohn
+
 deploy-k8s-all:
 	kubectl apply -f deploy_k8s/gateway
 	kubectl apply -f deploy_k8s/pusher
 	kubectl apply -f deploy_k8s/transfer
+
+deploy-docker-components:
+	
+
+test-it:
+	docker build -t geraldkohn/im-gateway -f dockerfiles/gateway.Dockerfile .
+	docker push geraldkohn/im-gateway
+	kubectl apply -f deploy_k8s/gateway

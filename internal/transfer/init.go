@@ -17,8 +17,7 @@ import (
 )
 
 var (
-	tf   *Transfer
-	conf *config.Config
+	tf *Transfer
 )
 
 type Transfer struct {
@@ -32,52 +31,46 @@ type Transfer struct {
 func initTransfer() {
 	tf = new(Transfer)
 	tf.pushDiscovery = servicediscovery.NewEtcdDiscovery(
-		conf.Transfer.PusherServiceName,
+		config.Conf.Transfer.PusherServiceName,
 	)
 	tf.db = db.NewDataBases(
 		db.MysqlConfig{
-			Addr:     conf.Mysql.MysqlAddr,
-			Username: conf.Mysql.MysqlUsername,
-			Password: conf.Mysql.MysqlPassword,
+			Addr:     config.Conf.Mysql.MysqlAddr,
+			Username: config.Conf.Mysql.MysqlUsername,
+			Password: config.Conf.Mysql.MysqlPassword,
 		},
 		db.RedisConfig{
-			Addr:     conf.Redis.RedisAddr,
-			Username: conf.Redis.RedisUsername,
-			Password: conf.Redis.RedisPassword,
+			Addr:     config.Conf.Redis.RedisAddr,
+			Password: config.Conf.Redis.RedisPassword,
 		},
 		db.MongodbConfig{
-			Addr:     conf.Mongo.MongoAddr,
-			Username: conf.Mongo.MongoUsername,
-			Password: conf.Mongo.MongoPassword,
+			Addr:     config.Conf.Mongo.MongoAddr,
+			Username: config.Conf.Mongo.MongoUsername,
+			Password: config.Conf.Mongo.MongoPassword,
 		},
 	)
 	tf.retryPushProducer = kafka.NewKafkaProducer(kafka.KafkaProducerConfig{
-		BrokerAddr:   conf.Kafka.KafkaBrokerAddr,
-		SASLUsername: conf.Kafka.KafkaSASLUsername,
-		SASLPassword: conf.Kafka.KafkaSASLPassword,
-		Topic:        conf.Kafka.KafkaMsgTopic,
+		BrokerAddr:   config.Conf.Kafka.KafkaBrokerAddr,
+		SASLUsername: config.Conf.Kafka.KafkaSASLUsername,
+		SASLPassword: config.Conf.Kafka.KafkaSASLPassword,
+		Topic:        config.Conf.Kafka.KafkaMsgTopic,
 	})
 	tf.retryDBProducer = kafka.NewKafkaProducer(kafka.KafkaProducerConfig{
-		BrokerAddr:   conf.Kafka.KafkaBrokerAddr,
-		SASLUsername: conf.Kafka.KafkaSASLUsername,
-		SASLPassword: conf.Kafka.KafkaSASLPassword,
-		Topic:        conf.Kafka.KafkaMsgTopic,
+		BrokerAddr:   config.Conf.Kafka.KafkaBrokerAddr,
+		SASLUsername: config.Conf.Kafka.KafkaSASLUsername,
+		SASLPassword: config.Conf.Kafka.KafkaSASLPassword,
+		Topic:        config.Conf.Kafka.KafkaMsgTopic,
 	})
 	tf.consumerHandler = consumerHandler{
-		kafka.NewConsumerGroup([]string{conf.Kafka.KafkaMsgTopic, conf.Kafka.KafkaRetryPushTopic}, utils.GenerateUID()),
+		kafka.NewConsumerGroup([]string{config.Conf.Kafka.KafkaMsgTopic, config.Conf.Kafka.KafkaRetryPushTopic}, utils.GenerateUID()),
 		make(map[string]handle),
 	}
-	tf.consumerHandler.topicHandle[conf.Kafka.KafkaMsgTopic] = tf.handleMsg
-	tf.consumerHandler.topicHandle[conf.Kafka.KafkaRetryPushTopic] = tf.handleRetryPush
-}
-
-func initConfig() {
-	conf = config.Init()
+	tf.consumerHandler.topicHandle[config.Conf.Kafka.KafkaMsgTopic] = tf.handleMsg
+	tf.consumerHandler.topicHandle[config.Conf.Kafka.KafkaRetryPushTopic] = tf.handleRetryPush
 }
 
 // 阻塞函数
 func Run() {
-	initConfig()
 	initTransfer()
 	ctx, cancel := context.WithCancel(context.Background())
 	go tf.pushDiscovery.Watch()                                               // 监听服务发现
