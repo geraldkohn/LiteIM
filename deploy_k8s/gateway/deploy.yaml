@@ -21,10 +21,10 @@ spec:
         ports:
         - name: rpc-port
           containerPort: 8020
-        - name: ws-port
-          containerPort: 8022
         - name: http-port
           containerPort: 8021
+        - name: ws-port
+          containerPort: 8022
   strategy: #更新策略
     type: RollingUpdate # 滚动更新
 ---
@@ -35,14 +35,18 @@ metadata:
   namespace: geraldkohn
 spec:
   ports:
-    - name: ws-port
+    - name: rpc-port
       protocol: TCP
-      port: 8022
-      targetPort: 8022
+      port: 8020
+      targetPort: 8020
     - name: http-port
       protocol: TCP
       port: 8021
       targetPort: 8021
+    - name: ws-port
+      protocol: TCP
+      port: 8022
+      targetPort: 8022
   selector:
     app: gateway
   type: NodePort

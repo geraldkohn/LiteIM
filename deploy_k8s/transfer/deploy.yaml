@@ -1,0 +1,22 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transfer-deployment
+  namespace: geraldkohn
+spec:
+  selector:
+    matchLabels:
+      app: transfer # 选择这个指定标签执行
+  replicas: 1 # 运行pod数量
+  template:
+    metadata:
+      labels:
+        app: transfer # 标签
+    spec:
+      containers:
+      - name: transfer
+        image: geraldkohn/im-transfer
+        imagePullPolicy: Always
+  strategy: #更新策略
+    type: RollingUpdate # 滚动更新

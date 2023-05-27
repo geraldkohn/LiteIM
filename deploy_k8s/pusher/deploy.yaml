@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pusher-deployment
+  namespace: geraldkohn
+spec:
+  selector:
+    matchLabels:
+      app: pusher # 选择这个指定标签执行
+  replicas: 1 # 运行pod数量
+  template:
+    metadata:
+      labels:
+        app: pusher # 标签
+    spec:
+      containers:
+      - name: pusher
+        image: geraldkohn/im-pusher
+        imagePullPolicy: Always
+        ports:
+        - name: rpc-port
+          containerPort: 8010
+  strategy: #更新策略
+    type: RollingUpdate # 滚动更新
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pusher
+  namespace: geraldkohn
+spec:
+  ports:
+    - name: rpc-port
+      protocol: TCP
+      port: 8010
+      targetPort: 8010
+  selector:
+    app: pusher
+  type: NodePort
