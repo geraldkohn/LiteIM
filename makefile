@@ -27,11 +27,3 @@ deploy-k8s-all:
 	kubectl apply -f deploy_k8s/gateway
 	kubectl apply -f deploy_k8s/pusher
 	kubectl apply -f deploy_k8s/transfer
-
-deploy-docker-components:
-	
-
-test-it:
-	docker build -t geraldkohn/im-gateway -f dockerfiles/gateway.Dockerfile .
-	docker push geraldkohn/im-gateway
-	kubectl apply -f deploy_k8s/gateway
